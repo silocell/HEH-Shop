@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Launchpad Shop</title>
+<meta name="description" content="Spend your Level Up points and Launchpad Pounds on your Launchpad profile picture.">
+<link rel="icon" type="image/png" href="https://civilinitiatives.org/favicon.png">
+<script>
+try{ var m = document.cookie.match(/(?:^|; )hl_theme=(dark|light|system)/), t = m ? m[1] : JSON.parse(localStorage.getItem("hl.theme")); /* the cookie is shared by every *.civilinitiatives.org site */
+     if(t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t); }catch(e){}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* ===================================================================
+   Launchpad Shop. Everything you can put on your profile picture, with
+   how rare it is and how few people own it. Prices, stock, the weekly
+   shop and what you own all come from the server (the profile
+   function); this page only shows them and asks.
+   =================================================================== */
+:root{
+  --bg:#f4f2ee; --card:#fff; --ink:#191c28; --soft:#5d6475; --faint:#8a90a0; --rule:#e2e1dc;
+  --accent:#4338ca; --accent-soft:#e0e7ff; --gold:#b45309; --good:#15803d; --bad:#b91c1c;
+  --common:#6b7280; --rare:#2563eb; --epic:#7c3aed; --legendary:#ea580c; --staff:#0d9488;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif; --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0f1117; --card:#181b24; --ink:#eceef4; --soft:#a3aabb; --faint:#7d8496; --rule:#2a2e3b;
+  --accent:#a5b4fc; --accent-soft:#1e1b4b; --gold:#fbbf24; --good:#4ade80; --bad:#f87171;
+  --common:#9ca3af; --rare:#60a5fa; --epic:#a78bfa; --legendary:#fb923c; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0f1117; --card:#181b24; --ink:#eceef4; --soft:#a3aabb; --faint:#7d8496; --rule:#2a2e3b;
+  --accent:#a5b4fc; --accent-soft:#1e1b4b; --gold:#fbbf24; --good:#4ade80; --bad:#f87171;
+  --common:#9ca3af; --rare:#60a5fa; --epic:#a78bfa; --legendary:#fb923c; color-scheme:dark; }
+*{box-sizing:border-box} html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);min-height:100vh}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+a{color:var(--accent)}
+
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 16px;
+  background:linear-gradient(90deg,#1e1b4b,#3730a3 55%,#9d174d);color:#fff}
+.top .brand{font-family:var(--display);font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:8px}
+.top .sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.14);font-weight:700;font-size:.9rem;white-space:nowrap}
+.xbtn{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;text-decoration:none;
+  border:2px solid rgba(255,255,255,.35);font-weight:700;flex:none}
+.xbtn:focus-visible,.tab:focus-visible,.card:focus-visible,.btn:focus-visible{outline:3px solid #fde68a;outline-offset:2px}
+
+main{max-width:1100px;margin:0 auto;padding:18px 16px 70px}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;background:var(--card);border:1px solid var(--rule);
+  border-radius:22px;padding:26px 24px;margin-bottom:16px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-40% -10% auto auto;width:420px;height:420px;border-radius:50%;
+  background:radial-gradient(circle,rgba(129,140,248,.18),transparent 65%);pointer-events:none}
+.stage{position:relative;display:grid;place-items:center;width:190px;height:190px}
+.stage .ped{position:absolute;bottom:-6px;left:20px;right:20px;height:22px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.18),transparent)}
+.hero h1{font-family:var(--display);font-size:clamp(1.5rem,3vw,2.2rem);margin:0;line-height:1.1}
+.hero .em{color:var(--soft);font-size:.9rem;margin:2px 0 12px;overflow-wrap:anywhere}
+.try{border-top:1px dashed var(--rule);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.try .nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700;font-size:1.05rem}
+.try .how{color:var(--soft);font-size:.88rem}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
+:root[data-theme="dark"] .btn:not(.ghost):not(.gold){color:#111}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .btn:not(.ghost):not(.gold){color:#111} }
+.btn.gold{background:linear-gradient(90deg,#d97706,#db2777);color:#fff}
+.btn.ghost{background:transparent;border:1px solid var(--rule);color:var(--ink)}
+.btn:disabled,.btn:disabled:not(.ghost):not(.gold){background:var(--rule);color:var(--soft);cursor:not-allowed}
+.btn.armed{background:#e8590c;color:#fff}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin}
+.tab{flex:none;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sub{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.sub .tab{padding:6px 12px;font-size:.86rem}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 14px}
+.filters input[type=search]{flex:1;min-width:160px;max-width:280px;border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 11px;font:inherit}
+.rf{border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:5px 11px;font-size:.8rem;font-weight:700;cursor:pointer}
+.rf[aria-pressed="true"]{color:#fff;border-color:transparent}
+.rf.common[aria-pressed="true"]{background:var(--common)} .rf.rare[aria-pressed="true"]{background:var(--rare)}
+.rf.epic[aria-pressed="true"]{background:var(--epic)} .rf.legendary[aria-pressed="true"]{background:var(--legendary)}
+.rf.mythic[aria-pressed="true"]{background:linear-gradient(90deg,#ec4899,#8b5cf6,#06b6d4)} .rf.unique[aria-pressed="true"]{background:linear-gradient(90deg,#f59e0b,#4338ca)} .rf.staff[aria-pressed="true"]{background:var(--staff)} .rf.own[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+h2.sec{font-family:var(--display);font-size:1.25rem;margin:18px 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+p.lead{color:var(--soft);margin:0 0 12px;font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.card{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:26px 10px 12px;
+  background:var(--card);border:1px solid var(--rule);border-radius:16px;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 24px -14px rgba(0,0,0,.4)}
+.card.on{outline:3px solid var(--accent);outline-offset:-1px}
+.card .pv{height:92px;display:grid;place-items:center}
+.card b{font-size:.88rem;line-height:1.2}
+.card small{font-size:.76rem;color:var(--soft)}
+.card .price{font-weight:800;font-size:.85rem}
+.card .price.pd{color:var(--gold)}
+.card .own{font-size:.72rem;color:var(--faint)}
+.card.owned .price{color:var(--good)}
+.card.locked .pv{filter:saturate(.55)}
+.rar{position:absolute;top:7px;left:8px;font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;color:#fff}
+.rar.common{background:var(--common)} .rar.rare{background:var(--rare)} .rar.epic{background:var(--epic)} .rar.legendary{background:var(--legendary)}
+.rar.mythic{background:linear-gradient(90deg,#ec4899,#8b5cf6,#06b6d4,#ec4899);background-size:200% 100%;animation:shim 3s linear infinite}
+.rar.unique{background:linear-gradient(90deg,#f59e0b,#fde68a,#4338ca,#f59e0b);background-size:200% 100%;animation:shim 2.5s linear infinite;color:#1e1b4b}
+.rar.staff{background:var(--staff)}
+.card.unique{border:2px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,#f59e0b,#4338ca) border-box}
+.card.staff{border-color:color-mix(in srgb,var(--staff) 50%,var(--rule))}
+.role{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:999px;color:#fff;margin-left:6px;vertical-align:middle}
+.role.owner{background:linear-gradient(90deg,#f59e0b,#4338ca)} .role.helper{background:var(--staff)}
+@keyframes shim{to{background-position:200% 0}}
+.card.legendary{border-color:color-mix(in srgb,var(--legendary) 45%,var(--rule))}
+.card.mythic{border:2px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,#ec4899,#8b5cf6,#06b6d4) border-box}
+.tag{position:absolute;top:7px;right:8px;font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:999px;background:#16a34a;color:#fff}
+.tag.stock{background:#be123c} .tag.out{background:#374151}
+.sample{font-family:var(--display);font-size:1.5rem;font-weight:800}
+.swatch{width:120px;height:80px;border-radius:12px;border:1px solid var(--rule);position:relative;overflow:hidden;background:var(--bg)}
+.swatch i{position:absolute;left:10px;right:10px;bottom:10px;height:12px;border-radius:6px}
+.styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:6px}
+.countdown{font-size:.85rem;font-weight:700;color:var(--soft);background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:3px 10px}
+.empty{color:var(--soft);padding:30px;text-align:center;border:1px dashed var(--rule);border-radius:16px}
+.ach{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--rule);border-radius:14px;margin-bottom:8px}
+.ach.done{border-color:var(--accent);background:var(--accent-soft)}
+.ach .ic{font-size:1.5rem}.ach .mid{flex:1;min-width:0}.ach small{color:var(--soft);display:block}
+.bar{display:block;height:6px;border-radius:99px;background:var(--rule);overflow:hidden;margin-top:5px}.bar span{display:block;height:100%;background:var(--accent)}
+.note{font-size:.84rem;color:var(--soft);max-width:520px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;padding:12px 18px;border-radius:999px;font-weight:700;color:#fff;
+  background:var(--good);box-shadow:0 12px 30px -10px rgba(0,0,0,.45);max-width:calc(100vw - 32px);text-align:center}
+.toast.bad{background:var(--bad)}
+.gate{max-width:480px;margin:12vh auto;text-align:center;background:var(--card);border:1px solid var(--rule);border-radius:20px;padding:30px}
+footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 30px}
+@media (max-width:640px){
+  .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .try .nm,.acts{justify-content:center}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .chip.pts-l{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .card{transition:none} .card:hover{transform:none} .rar.mythic,.rar.unique{animation:none} }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
+<script src="https://civilinitiatives.org/auth-store.js?b=20261026a"></script>
+<script src="https://civilinitiatives.org/avatar.js?b=20261028b"></script>
+</head>
+<body>
+<header class="top">
+  <span class="brand">🛍️ Launchpad Shop</span>
+  <span class="sp"></span>
+  <span class="chip" id="ptsChip" hidden></span>
+  <span class="chip" id="lpChip" hidden></span>
+  <a class="xbtn" href="https://civilinitiatives.org/" title="Back to the Launchpad" aria-label="Close and go back to the Launchpad">✕</a>
+</header>
+<main id="main">
+  <p class="empty" id="loading">Opening the shop…</p>
+</main>
+<footer>
+  Nothing here costs real money. ⭐ points come from Level Up; 🪙 Launchpad Pounds from getting answers right in any learning game.
+  <a href="#credits" id="creditsLink">Art credits</a>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var SUPABASE_URL = "https://hehs-live.duckdns.org";
+var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzkyODMyMjkwLCJleHAiOjIxMDgxOTIyOTB9.7gFhQa5RBwVtiOPLO7Qf2-aVEbkd5xgpLiN1J06Gybo";
+var sb = null;
+try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true,
+        storage:(window.HEHAuth && window.HEHAuth.storage) || undefined } }); } catch (e) {}
+
+var RAR = ["common", "rare", "epic", "legendary", "mythic", "staff", "unique"];
+var RNAME = { common:"Common", rare:"Rare", epic:"Epic", legendary:"Legendary", mythic:"Mythic", staff:"Helper", unique:"One of a kind" };
+var SIMPLE = ["bg", "pattern", "face", "frame", "hat", "sticker", "name", "theme"];
+var ART = [["face","Emoji characters"],["bg","Backgrounds"],["pattern","Patterns"],["frame","Frames"],["hat","Hats"],["sticker","Stickers"]];
+var OPT_NAME = { hair:"Hair", top:"Hair & hats", eyes:"Eyes", eyebrows:"Eyebrows", brows:"Eyebrows", mouth:"Mouth", lips:"Mouth", glasses:"Glasses",
+  earrings:"Earrings", features:"Face details", accessories:"Accessories", clothing:"Clothes", clothingGraphic:"T-shirt print", facialHair:"Beard",
+  beard:"Beard", hat:"Hats", face:"Face", sides:"Sides", texture:"Texture", head:"Head", body:"Body", gesture:"Gestures", bodyIcon:"Badge",
+  hairAccessories:"Hair clips", freckles:"Freckles", nose:"Nose", frontHair:"Fringe", cheek:"Cheeks", ear:"Ears", sideburn:"Sideburns", mask:"Masks" };
+/* The same option name means different things in different styles. */
+var OPT_STYLE = { "openPeeps.head":"Hair", "openPeeps.face":"Expression", "bigEars.face":"Face shape", "lorelei.head":"Face shape" };
+
+var C = null, BY = {}, S = null, COUNTS = null, me = { name:"", email:"" };
+var trial = null, picked = null, armed = null;
+var view = { tab:"week", art:"face", opt:null, rar:{}, owned:"", q:"" };
+
+function h(t, c, x){ var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function toast(t, bad){ var e = h("div", "toast" + (bad ? " bad" : ""), t); e.setAttribute("role", "status"); document.body.appendChild(e); setTimeout(function(){ e.remove(); }, 3200); }
+function initial(){ return ((me.name || me.email || "?").trim().charAt(0) || "?").toUpperCase(); }
+
+function call(body){
+  return sb.functions.invoke("profile", { body: body }).then(function(r){
+    if (r.error) {
+      var c = r.error.context;
+      if (c && c.json) return c.json().then(function(j){ throw new Error(j && j.error || "Something went wrong."); }, function(){ throw new Error("Couldn't reach the shop."); });
+      throw new Error("Couldn't reach the shop.");
+    }
+    if (r.data && r.data.error) throw new Error(r.data.error);
+    return r.data;
+  });
+}
+
+/* ---------- what an item costs, and whether you can have it ---------- */
+function isFree(it){ return !it.cost && !it.pounds && !it.ach && !it.only; }
+function has(it){ return isFree(it) || S.owned.indexOf(it.id) >= 0; }
+function onSale(it){ return S.shop.sale.indexOf(it.id) >= 0; }
+function featured(it){ return S.shop.featured.indexOf(it.id) >= 0; }
+function priceOf(it){
+  var off = onSale(it) ? 0.75 : 1;
+  if (it.pounds) return { lp:true, n:Math.max(1, Math.round(it.pounds * off)) };
+  return { lp:false, n:Math.max(1, Math.round(it.cost * off)) };
+}
+function sold(it){ return COUNTS && COUNTS.sold && COUNTS.sold[it.id] || 0; }
+function soldOut(it){ return it.stock && sold(it) >= it.stock; }
+function styleOk(it){ if (it.part !== "char") return true; var st = BY["cs:" + it.style]; return has(st); }
+function achName(id){ var a = (S.achievements || []).filter(function(x){ return x.id === id; })[0]; return a ? a.name : "an achievement"; }
+
+/* A look with one item put on (the same rules the server uses). */
+function withItem(look, it){
+  var l = clone(look);
+  if (SIMPLE.indexOf(it.part) >= 0) l[it.part] = it.id;
+  else if (it.part === "style") l.style = it.v;
+  else if (it.part === "char") {
+    var c = l.chars[it.style];
+    if (/Color$/.test(it.opt)) c.colors[it.opt] = it.v; else c.parts[it.opt] = it.v;
+    l.style = it.style;
+  }
+  return l;
+}
+function pic(look, size){ return HEHAvatar.el(look, size, { initial: initial() }); }
+
+/* ---------- the top: balances, your picture, the thing you're trying ---------- */
+function paintChips(){
+  var p = document.getElementById("ptsChip"), l = document.getElementById("lpChip");
+  p.hidden = l.hidden = false;
+  p.textContent = "⭐ " + S.pts.toLocaleString(); p.title = "Level Up points";
+  l.textContent = "🪙 " + S.pounds.toLocaleString(); l.title = "Launchpad Pounds";
+}
+function paintHero(){
+  var hero = document.getElementById("hero"); if (!hero) return;
+  hero.textContent = "";
+  var stage = h("div", "stage"); stage.appendChild(pic(trial, 168)); stage.appendChild(h("span", "ped"));
+  var info = h("div");
+  var nm1 = HEHAvatar.nameEl("h1", me.name || "You", trial);
+  if (S.role) nm1.appendChild(h("span", "role " + S.role, S.role === "owner" ? "Founder" : "Helper"));
+  info.appendChild(nm1);
+  info.appendChild(h("p", "em", me.email));
+  var t = h("div", "try");
+  if (!picked) {
+    t.appendChild(h("div", "how", "Tap anything below to try it on. Rare things are rare: the fewer people who own something, the more it says about you."));
+  } else {
+    var it = picked, nm = h("div", "nm");
+    nm.appendChild(h("span", "rar " + it.rarity, RNAME[it.rarity])); nm.lastChild.style.position = "static";
+    nm.appendChild(h("span", null, it.name));
+    t.appendChild(nm);
+    t.appendChild(h("div", "how", howTo(it)));
+    var acts = h("div", "acts");
+    acts.appendChild(actionBtn(it));
+    var back = h("button", "btn ghost", "Back to my look"); back.type = "button";
+    back.onclick = function(){ picked = null; armed = null; trial = clone(S.look); HEHAvatar.applyTheme(trial); paintHero(); markOn(); };
+    acts.appendChild(back);
+    t.appendChild(acts);
+  }
+  info.appendChild(t);
+  hero.appendChild(stage); hero.appendChild(info);
+}
+function howTo(it){
+  var bits = [];
+  if (it.only === "owner") bits.push("One of a kind: only the Launchpad's founder has this. It can never be bought.");
+  else if (it.only === "helper") bits.push("Helpers only: every helper has this for as long as they're a helper.");
+  else if (it.ach) bits.push("Can't be bought - earned with the " + achName(it.ach) + " achievement.");
+  else if (isFree(it)) bits.push("Free for everyone.");
+  if (it.stock) bits.push(soldOut(it) ? "Sold out: all " + it.stock + " copies are owned." : "Limited: only " + it.stock + " ever - " + (it.stock - sold(it)) + " left.");
+  if (it.rotating) bits.push(featured(it) ? "In this week's shop - it leaves on Monday." : "Only sold in weeks it's in the weekly shop.");
+  if (onSale(it)) bits.push("25% off this week.");
+  if (!isFree(it) && !it.only) bits.push(ownedLine(it));
+  if (it.part === "char" && !styleOk(it)) bits.push("Unlock the " + BY["cs:" + it.style].name + " first.");
+  return bits.join(" ");
+}
+function ownedLine(it){
+  if (!COUNTS || !COUNTS.total) return "";
+  var n = COUNTS.owners[it.id] || 0;
+  if (!n) return "Nobody owns this yet - be the first!";
+  if (n === 1 && has(it)) return "You're the only person who owns this!";
+  return "Owned by " + n + (n === 1 ? " person" : " people") + " (" + Math.max(1, Math.round(100 * n / COUNTS.total)) + "% of players).";
+}
+function actionBtn(it){
+  var b = h("button", "btn"); b.type = "button";
+  var mine = has(it), wearing = isWearing(it);
+  if (mine) {
+    b.textContent = wearing ? "You're wearing this" : "Wear it"; b.disabled = wearing || !styleOk(it);
+    b.onclick = function(){ go("use", it); };
+    return b;
+  }
+  if (it.only) { b.textContent = it.only === "owner" ? "👑 Founder only" : "🛟 Helpers only"; b.disabled = true; return b; }
+  if (it.ach) { b.textContent = "🏅 Earn it: " + achName(it.ach); b.disabled = true; return b; }
+  if (soldOut(it)) { b.textContent = "Sold out"; b.disabled = true; return b; }
+  if (it.rotating && !featured(it)) { b.textContent = "Not in this week's shop"; b.disabled = true; return b; }
+  if (!styleOk(it)) { b.textContent = "Unlock the " + BY["cs:" + it.style].name + " first"; b.disabled = true; return b; }
+  var p = priceOf(it), bal = p.lp ? S.pounds : S.pts;
+  if (bal < p.n) { b.textContent = "Need " + (p.n - bal) + " more " + (p.lp ? "🪙" : "⭐"); b.disabled = true; return b; }
+  b.className = "btn " + (p.lp ? "gold" : "") + (armed === it.id ? " armed" : "");
+  b.textContent = armed === it.id ? "Tap again to buy for " + (p.lp ? "🪙 " : "⭐ ") + p.n : "Buy for " + (p.lp ? "🪙 " : "⭐ ") + p.n;
+  b.onclick = function(){
+    if (armed !== it.id) { armed = it.id; paintHero(); return; }
+    armed = null; go("buy", it);
+  };
+  return b;
+}
+function isWearing(it){
+  var l = S.look;
+  if (SIMPLE.indexOf(it.part) >= 0) return l[it.part] === it.id;
+  if (it.part === "style") return l.style === it.v;
+  if (it.part === "char") { var c = l.chars[it.style]; return l.style === it.style && (/Color$/.test(it.opt) ? c.colors[it.opt] : c.parts[it.opt]) === it.v; }
+  return false;
+}
+function go(action, it){
+  call({ action: action, item: it.id }).then(function(st){
+    var bought = action === "buy";
+    S = st; trial = clone(S.look); HEHAvatar.applyTheme(trial); paintChips();
+    if (bought) { toast("Unlocked: " + it.name + "! 🎉"); loadCounts(); }
+    else toast("Wearing " + it.name + ".");
+    paintHero(); render();
+  }).catch(function(e){ toast(e.message, true); paintHero(); });
+}
+
+/* ---------- item cards ---------- */
+var io = ("IntersectionObserver" in window) ? new IntersectionObserver(function(es){
+  es.forEach(function(e){ if (e.isIntersecting) { io.unobserve(e.target); e.target._draw(); } });
+}, { rootMargin:"200px" }) : null;
+function preview(it){
+  var pv = h("div", "pv");
+  pv._draw = function(){
+    if (it.part === "name") { pv.appendChild(HEHAvatar.nameEl("span", (me.name || "Name").split(" ")[0], { name: it.id })); pv.lastChild.classList.add("sample"); return; }
+    if (it.part === "theme") {
+      var sw = h("div", "swatch"); var p = (it.v || "|||").split("|");
+      if (p[3]) sw.style.background = p[3] + ",var(--bg)";
+      var bar = h("i"); bar.style.background = p[0] || "var(--accent)"; sw.appendChild(bar); pv.appendChild(sw); return;
+    }
+    pv.appendChild(pic(withItem(S.look, it), 78));
+  };
+  if (io) io.observe(pv); else pv._draw();
+  return pv;
+}
+function card(it){
+  var c = h("button", "card " + it.rarity); c.type = "button"; c.dataset.id = it.id;
+  var mine = has(it);
+  if (mine) c.classList.add("owned"); else c.classList.add("locked");
+  c.appendChild(h("span", "rar " + it.rarity, RNAME[it.rarity]));
+  if (it.stock) c.appendChild(h("span", "tag " + (soldOut(it) ? "out" : "stock"), soldOut(it) ? "Sold out" : (it.stock - sold(it)) + " left"));
+  else if (onSale(it) && !mine) c.appendChild(h("span", "tag", "−25%"));
+  c.appendChild(preview(it));
+  c.appendChild(h("b", null, it.name));
+  var pr = h("span", "price");
+  if (isWearing(it)) pr.textContent = "✓ Wearing";
+  else if (mine) pr.textContent = isFree(it) ? "Free" : "✓ Owned";
+  else if (it.only) pr.textContent = it.only === "owner" ? "👑 Founder only" : "🛟 Helpers only";
+  else if (it.ach) pr.textContent = "🏅 Achievement";
+  else { var p = priceOf(it); pr.textContent = (p.lp ? "🪙 " : "⭐ ") + p.n; if (p.lp) pr.classList.add("pd"); }
+  c.appendChild(pr);
+  if (!isFree(it) && !it.only && COUNTS && COUNTS.total) {
+    var n = COUNTS.owners[it.id] || 0;
+    c.appendChild(h("span", "own", !n ? "Nobody owns this yet" : n === 1 && mine ? "Only you own this!" : "Owned by " + n + (n === 1 ? " person" : " people")));
+  }
+  c.onclick = function(){
+    picked = it; armed = null;
+    trial = withItem(S.look, it);
+    HEHAvatar.applyTheme(trial);
+    paintHero(); markOn();
+    if (window.innerWidth < 640) document.getElementById("hero").scrollIntoView({ behavior:"smooth", block:"start" });
+  };
+  return c;
+}
+function markOn(){ document.querySelectorAll(".card").forEach(function(c){ c.classList.toggle("on", !!picked && c.dataset.id === picked.id); }); }
+function filtered(list){
+  var anyR = RAR.some(function(r){ return view.rar[r]; });
+  var q = view.q.trim().toLowerCase();
+  return list.filter(function(it){
+    if (anyR && !view.rar[it.rarity]) return false;
+    if (view.owned === "mine" && !has(it)) return false;
+    if (view.owned === "not" && has(it)) return false;
+    if (q && it.name.toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  }).sort(function(a, b){ return RAR.indexOf(a.rarity) - RAR.indexOf(b.rarity) || (a.pounds || 0) - (b.pounds || 0) || a.cost - b.cost; });
+}
+function grid(list, empty){
+  var g = h("div", "grid");
+  if (!list.length) { var e = h("p", "empty", empty || "Nothing matches."); return e; }
+  list.forEach(function(it){ g.appendChild(card(it)); });
+  return g;
+}
+function filtersBar(){
+  var f = h("div", "filters");
+  var s = h("input"); s.type = "search"; s.placeholder = "Search…"; s.value = view.q; s.setAttribute("aria-label", "Search the shop");
+  s.oninput = function(){ view.q = s.value; renderList(); };
+  f.appendChild(s);
+  RAR.forEach(function(r){
+    var b = h("button", "rf " + r, RNAME[r]); b.type = "button"; b.setAttribute("aria-pressed", view.rar[r] ? "true" : "false");
+    b.onclick = function(){ view.rar[r] = !view.rar[r]; b.setAttribute("aria-pressed", view.rar[r] ? "true" : "false"); renderList(); };
+    f.appendChild(b);
+  });
+  [["mine","Owned"],["not","Not owned"]].forEach(function(o){
+    var b = h("button", "rf own", o[1]); b.type = "button"; b.setAttribute("aria-pressed", view.owned === o[0] ? "true" : "false");
+    b.onclick = function(){ view.owned = view.owned === o[0] ? "" : o[0]; render(); };
+    f.appendChild(b);
+  });
+  return f;
+}
+
+/* ---------- the tabs ---------- */
+var TABS = [["week","🔥 This week"],["character","🧑 Character"],["art","🎨 Art"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
+            ["limited","⏳ Limited"],["earned","🏅 Earned & special"],["achievements","🏆 Achievements"],["credits","Credits"]];
+var listHost = null, listFn = null;
+function renderList(){ if (listHost && listFn) { listHost.textContent = ""; listHost.appendChild(listFn()); markOn(); } }
+function render(){
+  var v = document.getElementById("view"); v.textContent = ""; listHost = listFn = null;
+  var t = document.getElementById("tabs"); t.textContent = "";
+  TABS.forEach(function(x){
+    var b = h("button", "tab", x[1]); b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", view.tab === x[0] ? "true" : "false");
+    b.onclick = function(){ view.tab = x[0]; view.opt = null; location.hash = x[0]; render(); };
+    t.appendChild(b);
+  });
+  ({ week:tabWeek, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
+     theme:tabSimple("theme","Dashboard themes","Changes the colours and the background of your dashboard. Tap one to see it right here."),
+     limited:tabLimited, earned:tabEarned, achievements:tabAch, credits:tabCredits })[view.tab](v);
+  markOn();
+}
+function withList(v, fn, filters){
+  if (filters !== false) v.appendChild(filtersBar());
+  listHost = h("div"); listFn = fn; v.appendChild(listHost); renderList();
+}
+function tabWeek(v){
+  var hd = h("h2", "sec", "This week's shop"); var cd = h("span", "countdown"); hd.appendChild(cd); v.appendChild(hd);
+  tick(cd);
+  v.appendChild(h("p", "lead", "Changes every Monday. Mythic items are only sold in the weeks they're here, and only a few copies will ever exist - everything else here is 25% off this week."));
+  var items = S.shop.featured.map(function(id){ return BY[id]; }).filter(Boolean);
+  v.appendChild(grid(items));
+}
+function tick(el){
+  function f(){
+    if (!document.body.contains(el)) return;
+    var ms = Date.parse(S.shop.resets) - Date.now();
+    if (ms <= 0) { el.textContent = "New items now - refresh!"; return; }
+    var dd = Math.floor(ms / 86400000), hh = Math.floor(ms % 86400000 / 3600000), mm = Math.floor(ms % 3600000 / 60000), ss = Math.floor(ms % 60000 / 1000);
+    el.textContent = "New items in " + (dd ? dd + "d " : "") + hh + "h " + String(mm).padStart(2, "0") + "m " + String(ss).padStart(2, "0") + "s";
+    setTimeout(f, 1000);
+  }
+  f();
+}
+function tabCharacter(v){
+  v.appendChild(h("h2", "sec", "Character"));
+  v.appendChild(h("p", "lead", "Pick a style, then build your character part by part. Your emoji character stays in the Art tab."));
+  var styles = h("div", "styles");
+  var emojiStyle = { id:"emoji", name:"Emoji", rarity:"common" };
+  [emojiStyle].concat(C.items.filter(function(i){ return i.part === "style"; })).forEach(function(it){
+    var real = it.id !== "emoji";
+    var c = real ? card(it) : h("button", "card common");
+    if (!real) {
+      c.type = "button"; c.appendChild(h("span", "rar common", "Common"));
+      var pv = h("div", "pv"); var l = clone(S.look); l.style = "emoji"; pv.appendChild(pic(l, 78)); c.appendChild(pv);
+      c.appendChild(h("b", null, "Emoji")); c.appendChild(h("span", "price", S.look.style === "emoji" ? "✓ Wearing" : "Free"));
+      c.onclick = function(){ call({ action:"outfit", look: Object.assign(clone(S.look), { style:"emoji" }) }).then(function(st){ S = st; trial = clone(S.look); paintHero(); render(); }).catch(function(e){ toast(e.message, true); }); };
+    }
+    styles.appendChild(c);
+  });
+  v.appendChild(styles);
+  var st = trial.style && trial.style !== "emoji" ? trial.style : (S.look.style !== "emoji" ? S.look.style : "adventurer");
+  var parts = C.items.filter(function(i){ return i.part === "char" && i.style === st; });
+  var opts = []; parts.forEach(function(i){ if (opts.indexOf(i.opt) < 0) opts.push(i.opt); });
+  if (!view.opt || opts.indexOf(view.opt) < 0) view.opt = opts.filter(function(o){ return !/Color$/.test(o); })[0] || opts[0];
+  var hd = h("h2", "sec", C.styles[st].name + " parts"); v.appendChild(hd);
+  var sub = h("div", "sub");
+  opts.forEach(function(o){
+    var label = /Color$/.test(o) ? (o.replace(/Color$/, "").replace(/([A-Z])/g, " $1").replace(/^./, function(c){ return c.toUpperCase(); }) + " colour") : (OPT_STYLE[st + "." + o] || OPT_NAME[o] || o);
+    var b = h("button", "tab", label); b.type = "button"; b.setAttribute("aria-selected", view.opt === o ? "true" : "false");
+    b.onclick = function(){ view.opt = o; render(); };
+    sub.appendChild(b);
+  });
+  v.appendChild(sub);
+  withList(v, function(){ return grid(filtered(parts.filter(function(i){ return i.opt === view.opt; }))); });
+}
+function tabArt(v){
+  v.appendChild(h("h2", "sec", "Art"));
+  var sub = h("div", "sub");
+  ART.forEach(function(a){
+    var b = h("button", "tab", a[1]); b.type = "button"; b.setAttribute("aria-selected", view.art === a[0] ? "true" : "false");
+    b.onclick = function(){ view.art = a[0]; render(); }; sub.appendChild(b);
+  });
+  v.appendChild(sub);
+  if (view.art === "face" && S.look.style !== "emoji") v.appendChild(h("p", "lead", "Emoji characters show when your style is Emoji (Character tab)."));
+  withList(v, function(){ return grid(filtered(C.items.filter(function(i){ return i.part === view.art; }))); });
+}
+function tabSimple(part, title, lead){
+  return function(v){ v.appendChild(h("h2", "sec", title)); v.appendChild(h("p", "lead", lead));
+    withList(v, function(){ return grid(filtered(C.items.filter(function(i){ return i.part === part; }))); }); };
+}
+function tabLimited(v){
+  v.appendChild(h("h2", "sec", "Limited"));
+  v.appendChild(h("p", "lead", "Only so many copies will ever exist. When they're gone, they're gone - for good. They come up in the weekly shop."));
+  v.appendChild(grid(C.items.filter(function(i){ return i.stock; })));
+}
+function tabEarned(v){
+  v.appendChild(h("h2", "sec", "Earned, never sold"));
+  v.appendChild(h("p", "lead", "These can't be bought with anything - only earned with achievements."));
+  v.appendChild(grid(C.items.filter(function(i){ return i.ach; })));
+  v.appendChild(h("h2", "sec", "Helpers only"));
+  v.appendChild(h("p", "lead", "Every helper has these for as long as they're a helper. Nobody else can get them."));
+  v.appendChild(grid(C.items.filter(function(i){ return i.only === "helper"; })));
+  v.appendChild(h("h2", "sec", "One of a kind"));
+  v.appendChild(h("p", "lead", "Made for the Launchpad's founder. There's exactly one of each, and they're not for sale."));
+  v.appendChild(grid(C.items.filter(function(i){ return i.only === "owner"; })));
+}
+function tabAch(v){
+  v.appendChild(h("h2", "sec", "Achievements"));
+  var r = S.rules, got = (S.today || []).reduce(function(n, t){ return n + t.pounds; }, 0);
+  v.appendChild(h("p", "lead", "Each pays out Launchpad Pounds once. Today: 🪙 " + Math.min(got, r.dayCap) + " of " + r.dayCap + " from learning (every " + r.perPound + " right answers in a subject = 1)."));
+  (S.achievements || []).slice().sort(function(a, b){ return (a.done - b.done) || (b.have / b.need - a.have / a.need); }).forEach(function(a){
+    var row = h("div", "ach" + (a.done ? " done" : ""));
+    row.appendChild(h("span", "ic", a.done ? "🏅" : "🔒"));
+    var mid = h("div", "mid"); mid.appendChild(h("b", null, a.name));
+    mid.appendChild(h("small", null, a.says + (a.unlocks.length ? " · unlocks " + a.unlocks.join(", ") : "") + " · " + a.have + " / " + a.need));
+    var bar = h("span", "bar"), f = h("span"); f.style.width = Math.round(100 * a.have / a.need) + "%"; bar.appendChild(f); mid.appendChild(bar);
+    row.appendChild(mid); row.appendChild(h("b", null, (a.done ? "✓ " : "") + "🪙 " + a.reward));
+    v.appendChild(row);
+  });
+}
+function tabCredits(v){
+  v.appendChild(h("h2", "sec", "Art credits"));
+  v.appendChild(h("p", "lead", "The characters and emoji art are free artwork shared by their makers. Thank you!"));
+  var ul = h("ul");
+  Object.keys(C.styles).forEach(function(k){ ul.appendChild(h("li", null, C.styles[k].credit + " - via DiceBear (dicebear.com, MIT).")); });
+  ul.appendChild(h("li", null, "Emoji art: Twemoji by Twitter, Inc and other contributors, CC-BY 4.0 (github.com/jdecked/twemoji)."));
+  v.appendChild(ul);
+}
+
+function loadCounts(){
+  return call({ action:"stats" }).then(function(c){ COUNTS = c; if (S) { render(); paintHero(); } }, function(){});
+}
+
+/* ---------- start ---------- */
+function gate(text){
+  var m = document.getElementById("main"); m.textContent = "";
+  var g = h("div", "gate"); g.appendChild(h("h1", null, "🛍️ Launchpad Shop"));
+  g.appendChild(h("p", null, text));
+  var a = h("a", "btn", "Go to the Launchpad"); a.href = "https://civilinitiatives.org/"; g.appendChild(a);
+  m.appendChild(g);
+}
+if (!sb) { gate("The shop couldn't start. Try reloading."); return; }
+sb.auth.getSession().then(function(r){
+  var s = r && r.data && r.data.session;
+  if (!s) { gate("Sign in on the Launchpad first, then come back here."); return; }
+  var md = s.user.user_metadata || {};
+  me = { name: md.full_name || md.name || (s.user.email || "").split("@")[0], email: s.user.email || "" };
+  return Promise.all([HEHAvatar.ready, call({ action:"get" })]).then(function(x){
+    C = x[0]; C.items.forEach(function(i){ BY[i.id] = i; });
+    S = x[1]; trial = clone(S.look); HEHAvatar.applyTheme(trial);
+    var m = document.getElementById("main"); m.textContent = "";
+    var hero = h("section", "hero"); hero.id = "hero"; m.appendChild(hero);
+    var tabs = h("nav", "tabs"); tabs.id = "tabs"; tabs.setAttribute("role", "tablist"); tabs.setAttribute("aria-label", "Shop sections"); m.appendChild(tabs);
+    var v = h("section"); v.id = "view"; m.appendChild(v);
+    var want = location.hash.slice(1); if (TABS.some(function(t){ return t[0] === want; })) view.tab = want;
+    paintChips(); paintHero(); render(); loadCounts();
+  });
+}).catch(function(e){ gate((e && e.message) || "The shop couldn't open. Try again in a minute."); });
+document.getElementById("creditsLink").onclick = function(e){ if (S) { e.preventDefault(); view.tab = "credits"; render(); window.scrollTo(0, 0); } };
+})();
+</script>
+</body>
+</html>
