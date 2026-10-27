@@ -406,7 +406,7 @@ function filtersBar(){
 }
 
 /* ---------- the tabs ---------- */
-var TABS = [["week","🔥 This week"],["character","🧑 Character"],["art","🎨 Art"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
+var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["character","🧑 Character"],["art","🎨 Art"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
             ["limited","⏳ Limited"],["earned","🏅 Earned & special"],["achievements","🏆 Achievements"],["credits","Credits"]];
 var listHost = null, listFn = null;
 function renderList(){ if (listHost && listFn) { listHost.textContent = ""; listHost.appendChild(listFn()); markOn(); } }
@@ -418,7 +418,7 @@ function render(){
     b.onclick = function(){ view.tab = x[0]; view.opt = null; location.hash = x[0]; render(); };
     t.appendChild(b);
   });
-  ({ week:tabWeek, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
+  ({ week:tabWeek, owned:tabOwned, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
      theme:tabSimple("theme","Dashboard themes","Changes the colours and the background of your dashboard. Tap one to see it right here."),
      limited:tabLimited, earned:tabEarned, achievements:tabAch, credits:tabCredits })[view.tab](v);
   markOn();
@@ -426,6 +426,23 @@ function render(){
 function withList(v, fn, filters){
   if (filters !== false) v.appendChild(filtersBar());
   listHost = h("div"); listFn = fn; v.appendChild(listHost); renderList();
+}
+/* Everything you own (not the free starter things), split into exclusive and everyday. */
+function isExclusive(it){ return !!(it.only || it.ach || it.days || it.stock || it.rotating || ["legendary","mythic","event","staff","unique"].indexOf(it.rarity) >= 0); }
+function tabOwned(v){
+  var mine = C.items.filter(function(i){ return !isFree(i) && has(i); });
+  var ex = mine.filter(isExclusive), reg = mine.filter(function(i){ return !isExclusive(i); });
+  var free = C.items.filter(isFree).length;
+  v.appendChild(h("h2", "sec", "Owned"));
+  v.appendChild(h("p", "lead", "You own " + mine.length + (mine.length === 1 ? " thing" : " things") + " - " + ex.length + " exclusive. (Plus " + free + " free starter items everyone has.)"));
+  var byRare = function(a, b){ return RAR.indexOf(b.rarity) - RAR.indexOf(a.rarity) || a.name.localeCompare(b.name); };
+  v.appendChild(h("h2", "sec", "✨ Exclusive (" + ex.length + ")"));
+  v.appendChild(h("p", "lead", "Rare finds: Legendary, Mythic, limited copies, achievement rewards, special-day items, and staff or one-of-a-kind items."));
+  var KIND = { bg:"Background", pattern:"Pattern", face:"Emoji character", frame:"Frame", hat:"Hat", sticker:"Sticker", name:"Name colour", theme:"Theme", tag:"Tag", style:"Character style", char:"Character part" };
+  var labelled = function(g){ if (g.querySelectorAll) g.querySelectorAll(".card").forEach(function(c){ var it = BY[c.dataset.id]; if (it && KIND[it.part]) c.insertBefore(h("span", "own", KIND[it.part]), c.querySelector(".price")); }); return g; };
+  v.appendChild(labelled(grid(ex.sort(byRare), "Nothing exclusive yet - earn achievements, save up Pounds, or come back on a special day.")));
+  v.appendChild(h("h2", "sec", "Everything else (" + reg.length + ")"));
+  v.appendChild(labelled(grid(reg.sort(byRare), "Nothing bought yet - have a look in the other tabs.")));
 }
 function tabWeek(v){
   var hd = h("h2", "sec", "This week's shop"); var cd = h("span", "countdown"); hd.appendChild(cd); v.appendChild(hd);
