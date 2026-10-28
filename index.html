@@ -93,6 +93,12 @@ p.lead{color:var(--soft);margin:0 0 12px;font-size:.9rem}
 .card.on{outline:3px solid var(--accent);outline-offset:-1px}
 .card .pv{height:92px;display:grid;place-items:center}
 .card b{font-size:.88rem;line-height:1.2}
+.scar{display:inline-block;white-space:nowrap;font-size:.66rem;font-weight:800;padding:2px 8px;border-radius:999px;line-height:1.4}
+.scar.one{background:linear-gradient(90deg,#111827,#b45309,#fde68a);color:#fff;box-shadow:0 0 0 1px #fde68a inset}
+.scar.ultra{background:linear-gradient(90deg,#7c3aed,#db2777);color:#fff}
+.scar.limited{background:#be123c;color:#fff}
+.scar.founder{background:linear-gradient(90deg,#f59e0b,#4338ca);color:#fff}
+.scar.helper{background:#0d9488;color:#fff}.scar.tester{background:#16a34a;color:#fff}.scar.earned{background:#a16207;color:#fff}
 .card small{font-size:.76rem;color:var(--soft)}
 .card .price{font-weight:800;font-size:.85rem}
 .card .price.pd{color:var(--gold)}
@@ -252,7 +258,18 @@ try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ per
         storage:(window.HEHAuth && window.HEHAuth.storage) || undefined } }); } catch (e) {}
 
 var RAR = ["common", "rare", "epic", "legendary", "mythic", "exotic", "relic", "event", "tester", "staff", "unique"];
-var RNAME = { common:"Common", rare:"Rare", epic:"Epic", legendary:"Legendary", mythic:"Mythic", exotic:"Exotic", relic:"1 of 1", event:"Special day", tester:"Tester", staff:"Helper", unique:"One of a kind" };
+var RNAME = { common:"Common", rare:"Rare", epic:"Epic", legendary:"Legendary", mythic:"Mythic", exotic:"Exotic", relic:"One of a kind", event:"Special day", tester:"Tester", staff:"Helper", unique:"Founder" };
+/* How rare something really is, by how many copies can ever exist. */
+function scarcity(it){
+  if (it.stock === 1) return ["one", "💎 Only 1 exists"];
+  if (it.stock && it.stock <= 5) return ["ultra", "🔥 Only " + it.stock + " exist"];
+  if (it.stock) return ["limited", "⏳ Only " + it.stock + " exist"];
+  if (it.only === "owner") return ["founder", "👑 Founder exclusive"];
+  if (it.only === "helper") return ["helper", "🛟 Helpers only"];
+  if (it.gift) return ["tester", "🧪 Testers only"];
+  if (it.ach) return ["earned", "🏅 Earned, never sold"];
+  return null;
+}
 var SIMPLE = ["bg", "pattern", "face", "frame", "hat", "sticker", "name", "theme", "tag", "card"];
 var ART = [["face","Emoji characters"],["bg","Backgrounds"],["pattern","Patterns"],["frame","Frames"],["hat","Hats"],["sticker","Stickers"]];
 var OPT_NAME = { hair:"Hair", top:"Hair & hats", eyes:"Eyes", eyebrows:"Eyebrows", brows:"Eyebrows", mouth:"Mouth", lips:"Mouth", glasses:"Glasses",
@@ -374,7 +391,9 @@ function paintDock(){
 }
 function howTo(it){
   var bits = [];
-  if (it.only === "owner") bits.push("One of a kind: only the Launchpad's founder has this. It can never be bought.");
+  if (it.only === "owner") bits.push("Founder exclusive: only the Launchpad's founder has this. It can never be bought.");
+  if (it.stock === 1) bits.push("One of a kind: only one will ever exist - whoever gets it is the only person in the world with it.");
+  else if (it.stock) bits.push("Only " + it.stock + " will ever exist.");
   else if (it.only === "helper") bits.push("Helpers only: every helper has this for as long as they're a helper.");
   else if (it.gift) bits.push("A thank-you for the people who helped test the Launchpad. It can't be bought or traded - only the founder gives it.");
   else if (it.ach) bits.push("Can't be bought - earned with the " + achName(it.ach) + " achievement.");
@@ -481,6 +500,7 @@ function card(it){
   else if (onSale(it) && !mine) c.appendChild(h("span", "tag", "−25%"));
   c.appendChild(preview(it));
   c.appendChild(h("b", null, it.name));
+  var sc = scarcity(it); if (sc) c.appendChild(h("span", "scar " + sc[0], sc[1]));
   var pr = h("span", "price");
   if (isWearing(it)) pr.textContent = "✓ Wearing";
   else if (mine) pr.textContent = isFree(it) ? "Free" : "✓ Owned";
@@ -1041,8 +1061,8 @@ function tabEarned(v){
   v.appendChild(h("h2", "sec", "Helpers only"));
   v.appendChild(h("p", "lead", "Every helper has these for as long as they're a helper. Nobody else can get them."));
   v.appendChild(grid(C.items.filter(function(i){ return i.only === "helper"; })));
-  v.appendChild(h("h2", "sec", "One of a kind"));
-  v.appendChild(h("p", "lead", "Made for the Launchpad's founder. There's exactly one of each, and they're not for sale."));
+  v.appendChild(h("h2", "sec", "👑 Founder exclusive"));
+  v.appendChild(h("p", "lead", "Made for the Launchpad's founder - one in every category. Only the founder has them, and they're not for sale."));
   v.appendChild(grid(C.items.filter(function(i){ return i.only === "owner"; })));
 }
 function tabAch(v){
