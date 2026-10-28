@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Launchpad Shop</title>
-<meta name="description" content="Spend your Level Up points and Launchpad Pounds on your Launchpad profile picture.">
+<meta name="description" content="Spend your pence and Launchpad Pounds on your Launchpad profile picture, trade with friends and see your wallet.">
 <link rel="icon" type="image/png" href="https://civilinitiatives.org/favicon.png">
 <script>
 try{ var m = document.cookie.match(/(?:^|; )hl_theme=(dark|light|system)/), t = m ? m[1] : JSON.parse(localStorage.getItem("hl.theme")); /* the cookie is shared by every *.civilinitiatives.org site */
@@ -71,7 +71,7 @@ main{max-width:1100px;margin:0 auto;padding:18px 16px 70px}
 .btn:disabled,.btn:disabled:not(.ghost):not(.gold){background:var(--rule);color:var(--soft);cursor:not-allowed}
 .btn.armed{background:#e8590c;color:#fff}
 
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;padding:2px 2px 8px}
 .tab{flex:none;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .sub{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
@@ -104,6 +104,11 @@ p.lead{color:var(--soft);margin:0 0 12px;font-size:.9rem}
 .rar.mythic{background:linear-gradient(90deg,#ec4899,#8b5cf6,#06b6d4,#ec4899);background-size:200% 100%;animation:shim 3s linear infinite}
 .rar.unique{background:linear-gradient(90deg,#f59e0b,#fde68a,#4338ca,#f59e0b);background-size:200% 100%;animation:shim 2.5s linear infinite;color:#1e1b4b}
 .rar.staff{background:var(--staff)} .rar.event{background:linear-gradient(90deg,#be185d,#f59e0b)}
+.rar.exotic{background:linear-gradient(90deg,#0891b2,#a5f3fc,#0891b2);background-size:200% 100%;animation:shim 2.5s linear infinite;color:#083344}
+.rar.relic{background:linear-gradient(90deg,#000,#f59e0b,#fff,#f59e0b,#000);background-size:200% 100%;animation:shim 2s linear infinite;color:#000}
+.card.exotic{border:2px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,#0891b2,#a5f3fc,#0e7490) border-box}
+.card.relic{border:3px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,conic-gradient(#000,#f59e0b,#fff,#ec4899,#22d3ee,#000) border-box;box-shadow:0 0 22px -6px #f59e0b}
+.rf.exotic[aria-pressed="true"]{background:#0891b2} .rf.relic[aria-pressed="true"]{background:#000;color:#f59e0b}
 .card.event{border-color:color-mix(in srgb,var(--event) 45%,var(--rule))}
 .daybar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;margin:0 0 14px;border-radius:16px;color:#fff;
   background:linear-gradient(100deg,#be185d,#f59e0b);box-shadow:0 10px 26px -14px rgba(190,24,93,.8)}
@@ -134,6 +139,49 @@ p.lead{color:var(--soft);margin:0 0 12px;font-size:.9rem}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:50;padding:12px 18px;border-radius:999px;font-weight:700;color:#fff;
   background:var(--good);box-shadow:0 12px 30px -10px rgba(0,0,0,.45);max-width:calc(100vw - 32px);text-align:center}
 .toast.bad{background:var(--bad)}
+body.docked .toast{bottom:92px}
+body.docked footer{padding-bottom:100px}
+.photobox{display:flex;gap:14px;align-items:center;padding:14px;margin:4px 0 14px;border-radius:16px;background:var(--card);border:2px solid var(--accent)}
+.photopv{width:88px;height:88px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;font-size:2rem;background:var(--rule)}
+.photopv img{width:100%;height:100%;object-fit:cover}
+.photomid{flex:1;min-width:0}
+.wallet{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.wside{flex:1;min-width:220px}
+.debit{position:relative;width:min(360px,100%);aspect-ratio:1.586;border-radius:18px;color:#fff;padding:18px 20px;box-sizing:border-box;
+  box-shadow:0 20px 40px -18px rgba(0,0,0,.6);overflow:hidden;font-family:var(--display,system-ui)}
+.debit::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);pointer-events:none}
+.debit.light{color:#0f172a}
+.debit .dbank{position:absolute;top:16px;left:20px;font-weight:800;letter-spacing:.14em;font-size:.72rem;opacity:.9}
+.debit .dkind{position:absolute;top:16px;right:20px;font-weight:800;font-size:.62rem;letter-spacing:.1em;opacity:.85}
+.debit .dchip{position:absolute;top:46px;left:20px;width:42px;height:31px;border-radius:7px;background:linear-gradient(135deg,#fde68a,#ca8a04 60%,#fef3c7)}
+.debit .dbal{position:absolute;top:44px;right:20px;text-align:right;display:flex;flex-direction:column;font-weight:800;font-size:1.15rem;line-height:1.25}
+.debit .dnum{position:absolute;left:20px;bottom:42px;font-family:ui-monospace,monospace;font-size:1.05rem;letter-spacing:.16em}
+.debit .dname{position:absolute;left:20px;bottom:16px;font-weight:700;font-size:.8rem;letter-spacing:.08em}
+.minicard{width:110px;aspect-ratio:1.586;border-radius:9px;position:relative;box-shadow:0 6px 14px -8px rgba(0,0,0,.6)}
+.minicard i{position:absolute;left:10px;top:24px;width:20px;height:15px;border-radius:4px;background:linear-gradient(135deg,#fde68a,#ca8a04)}
+@media (max-width:480px){ .dock .btn.ghost:not([aria-label]){display:none} }
+.goal{display:flex;gap:14px;align-items:center;padding:14px;border-radius:16px;background:var(--card);border:1px solid var(--rule);margin-bottom:10px;flex-wrap:wrap}
+.goal .gmid{flex:1;min-width:180px}.goal small{color:var(--soft);display:block;margin-bottom:4px}
+.tip{padding:12px 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--rule);margin:12px 0}
+.tip p{margin:4px 0 0}
+.stmt{width:100%;border-collapse:collapse;font-size:.9rem;background:var(--card);border-radius:12px;overflow:hidden}
+.stmt th,.stmt td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule)}
+.stmt th{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--soft)}
+.stmt td.in{color:var(--good);font-weight:700}.stmt td.out{color:var(--bad);font-weight:700}
+.trow{padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--rule);margin-bottom:8px}
+.trow p{margin:0 0 6px}
+.tsel{padding:10px 12px;border-radius:12px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit;margin-bottom:6px;max-width:100%}
+.tsub{margin:14px 0 6px;font-size:1rem}
+.mrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.tl{display:inline-flex;align-items:center;gap:4px}
+.tnum{width:90px;padding:8px 10px;border-radius:10px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit}
+.dock{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:10px;
+  width:min(720px,calc(100vw - 24px));padding:10px 12px;border-radius:18px;background:var(--card);border:1px solid var(--rule);
+  box-shadow:0 18px 40px -12px rgba(0,0,0,.45)}
+.dock .dmid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dock .dmid b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock .btn{white-space:nowrap}
+@media (max-width:480px){ .dock .dmini{display:none} .dock .btn{padding:9px 12px;font-size:.85rem} }
 .gate{max-width:480px;margin:12vh auto;text-align:center;background:var(--card);border:1px solid var(--rule);border-radius:20px;padding:30px}
 footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 30px}
 @media (max-width:640px){
@@ -142,11 +190,11 @@ footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 3
   .grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
   .chip.pts-l{display:none}
 }
-@media (prefers-reduced-motion:reduce){ .card{transition:none} .card:hover{transform:none} .rar.mythic,.rar.unique{animation:none} }
+@media (prefers-reduced-motion:reduce){ .card{transition:none} .card:hover{transform:none} .rar.mythic,.rar.unique,.rar.exotic,.rar.relic{animation:none} }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
 <script src="https://civilinitiatives.org/auth-store.js?b=20261026a"></script>
-<script src="https://civilinitiatives.org/avatar.js?b=20261028c"></script>
+<script src="https://civilinitiatives.org/avatar.js?b=20261028d"></script>
 </head>
 <body>
 <header class="top">
@@ -160,7 +208,7 @@ footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 3
   <p class="empty" id="loading">Opening the shop…</p>
 </main>
 <footer>
-  Nothing here costs real money. ⭐ points come from Level Up; 🪙 Launchpad Pounds from getting answers right in any learning game.
+  Nothing here costs real money. Pence (p): 1p for each right answer in the learning games, and 1-3p a round in the Arcade and Scratch games (up to 10p per game a day). 🪙 Launchpad Pounds are rare: achievements always pay them, and every right answer in a learning game has a small lucky chance of one.
   <a href="#credits" id="creditsLink">Art credits</a>
 </footer>
 
@@ -173,9 +221,9 @@ var sb = null;
 try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true,
         storage:(window.HEHAuth && window.HEHAuth.storage) || undefined } }); } catch (e) {}
 
-var RAR = ["common", "rare", "epic", "legendary", "mythic", "event", "staff", "unique"];
-var RNAME = { common:"Common", rare:"Rare", epic:"Epic", legendary:"Legendary", mythic:"Mythic", event:"Special day", staff:"Helper", unique:"One of a kind" };
-var SIMPLE = ["bg", "pattern", "face", "frame", "hat", "sticker", "name", "theme", "tag"];
+var RAR = ["common", "rare", "epic", "legendary", "mythic", "exotic", "relic", "event", "staff", "unique"];
+var RNAME = { common:"Common", rare:"Rare", epic:"Epic", legendary:"Legendary", mythic:"Mythic", exotic:"Exotic", relic:"1 of 1", event:"Special day", staff:"Helper", unique:"One of a kind" };
+var SIMPLE = ["bg", "pattern", "face", "frame", "hat", "sticker", "name", "theme", "tag", "card"];
 var ART = [["face","Emoji characters"],["bg","Backgrounds"],["pattern","Patterns"],["frame","Frames"],["hat","Hats"],["sticker","Stickers"]];
 var OPT_NAME = { hair:"Hair", top:"Hair & hats", eyes:"Eyes", eyebrows:"Eyebrows", brows:"Eyebrows", mouth:"Mouth", lips:"Mouth", glasses:"Glasses",
   earrings:"Earrings", features:"Face details", accessories:"Accessories", clothing:"Clothes", clothingGraphic:"T-shirt print", facialHair:"Beard",
@@ -213,9 +261,9 @@ function onSale(it){ return S.shop.sale.indexOf(it.id) >= 0; }
 function featured(it){ return S.shop.featured.indexOf(it.id) >= 0; }
 function priceOf(it){
   var off = onSale(it) ? 0.75 : 1;
-  if (it.pounds) return { lp:true, n:Math.max(1, Math.round(it.pounds * off)) };
-  return { lp:false, n:Math.max(1, Math.round(it.cost * off)) };
+  return { p: it.cost ? Math.max(1, Math.round(it.cost * off)) : 0, lp: it.pounds ? Math.max(1, Math.round(it.pounds * off)) : 0 };
 }
+function money(p, lp){ var b = []; if (p) b.push(Number(p).toLocaleString() + "p"); if (lp) b.push("🪙 " + Number(lp).toLocaleString()); return b.join(" + ") || "Free"; }
 function sold(it){ return COUNTS && COUNTS.sold && COUNTS.sold[it.id] || 0; }
 function soldOut(it){ return it.stock && sold(it) >= it.stock; }
 function styleOk(it){ if (it.part !== "char") return true; var st = BY["cs:" + it.style]; return has(st); }
@@ -239,7 +287,7 @@ function pic(look, size){ return HEHAvatar.el(look, size, { initial: initial() }
 function paintChips(){
   var p = document.getElementById("ptsChip"), l = document.getElementById("lpChip");
   p.hidden = l.hidden = false;
-  p.textContent = "⭐ " + S.pts.toLocaleString(); p.title = "Level Up points";
+  p.textContent = S.pts.toLocaleString() + "p"; p.title = "Pence - earned in Level Up";
   l.textContent = "🪙 " + S.pounds.toLocaleString(); l.title = "Launchpad Pounds";
 }
 function paintHero(){
@@ -271,6 +319,27 @@ function paintHero(){
   }
   info.appendChild(t);
   hero.appendChild(stage); hero.appendChild(info);
+  paintDock();
+}
+/* The bar at the bottom: what you're trying on, and the button to get it - no scrolling back up. */
+function paintDock(){
+  var d = document.getElementById("dock");
+  if (!d) { d = h("div", "dock"); d.id = "dock"; document.body.appendChild(d); }
+  d.textContent = "";
+  if (!picked) { d.hidden = true; document.body.classList.remove("docked"); return; }
+  d.hidden = false; document.body.classList.add("docked");
+  var mini = h("span", "dmini"); mini.appendChild(pic(trial, 44)); d.appendChild(mini);
+  var mid = h("span", "dmid"); mid.appendChild(h("span", "rar " + picked.rarity, RNAME[picked.rarity])); mid.lastChild.style.position = "static";
+  mid.appendChild(h("b", null, picked.name)); d.appendChild(mid);
+  d.appendChild(actionBtn(picked));
+  if (!has(picked) && (picked.cost || picked.pounds) && !picked.only && !picked.ach && !picked.days && goalGet() !== picked.id) {
+    var sv = h("button", "btn ghost", "🎯 Save for this"); sv.type = "button"; sv.title = "Make it your savings goal (Wallet tab)";
+    var it0 = picked; sv.onclick = function(){ goalSet(it0.id); toast("Saving up for " + it0.name + " - see your Wallet."); paintDock(); };
+    d.appendChild(sv);
+  }
+  var x = h("button", "btn ghost", "✕"); x.type = "button"; x.setAttribute("aria-label", "Stop trying it on");
+  x.onclick = function(){ picked = null; armed = null; trial = clone(S.look); HEHAvatar.applyTheme(trial); paintHero(); markOn(); };
+  d.appendChild(x);
 }
 function howTo(it){
   var bits = [];
@@ -312,10 +381,10 @@ function actionBtn(it){
   if (soldOut(it)) { b.textContent = "Sold out"; b.disabled = true; return b; }
   if (it.rotating && !featured(it)) { b.textContent = "Not in this week's shop"; b.disabled = true; return b; }
   if (!styleOk(it)) { b.textContent = "Unlock the " + BY["cs:" + it.style].name + " first"; b.disabled = true; return b; }
-  var p = priceOf(it), bal = p.lp ? S.pounds : S.pts;
-  if (bal < p.n) { b.textContent = "Need " + (p.n - bal) + " more " + (p.lp ? "🪙" : "⭐"); b.disabled = true; return b; }
+  var p = priceOf(it), needP = Math.max(0, p.p - S.pts), needL = Math.max(0, p.lp - S.pounds);
+  if (needP || needL) { b.textContent = "Need " + money(needP, needL) + " more"; b.disabled = true; return b; }
   b.className = "btn " + (p.lp ? "gold" : "") + (armed === it.id ? " armed" : "");
-  b.textContent = armed === it.id ? "Tap again to buy for " + (p.lp ? "🪙 " : "⭐ ") + p.n : "Buy for " + (p.lp ? "🪙 " : "⭐ ") + p.n;
+  b.textContent = armed === it.id ? "Tap again to buy for " + money(p.p, p.lp) : "Buy for " + money(p.p, p.lp);
   b.onclick = function(){
     if (armed !== it.id) { armed = it.id; paintHero(); return; }
     armed = null; go("buy", it);
@@ -347,6 +416,7 @@ function preview(it){
   var pv = h("div", "pv");
   pv._draw = function(){
     if (it.part === "name") { pv.appendChild(HEHAvatar.nameEl("span", (me.name || "Name").split(" ")[0], { name: it.id })); pv.lastChild.classList.add("sample"); return; }
+    if (it.part === "card") { var mc = h("div", "minicard"); mc.style.background = it.v; mc.appendChild(h("i")); pv.appendChild(mc); return; }
     if (it.part === "tag") { pv.className = "pv tagpv"; var tt = HEHAvatar.tagEl(it.id); pv.appendChild(tt || h("span", "when", "No tag")); return; }
     if (it.part === "theme") {
       var sw = h("div", "swatch"); var p = (it.v || "|||").split("|");
@@ -373,7 +443,7 @@ function card(it){
   else if (it.only) pr.textContent = it.only === "owner" ? "👑 Founder only" : "🛟 Helpers only";
   else if (it.ach) pr.textContent = "🏅 Achievement";
   else if (it.days) pr.textContent = dayOk(it) ? "🎁 Free today!" : "📅 Special day";
-  else { var p = priceOf(it); pr.textContent = (p.lp ? "🪙 " : "⭐ ") + p.n; if (p.lp) pr.classList.add("pd"); }
+  else { var p = priceOf(it); pr.textContent = money(p.p, p.lp); if (p.lp) pr.classList.add("pd"); }
   c.appendChild(pr);
   if (it.days && !mine) c.appendChild(h("span", "when", it.when));
   if (!isFree(it) && !it.only && COUNTS && COUNTS.total) {
@@ -381,11 +451,12 @@ function card(it){
     c.appendChild(h("span", "own", !n ? "Nobody owns this yet" : n === 1 && mine ? "Only you own this!" : "Owned by " + n + (n === 1 ? " person" : " people")));
   }
   c.onclick = function(){
+    /* Yours already? Put it straight on. Otherwise try it on, with the buy bar at the bottom. */
+    if (mine && styleOk(it) && !isWearing(it)) { picked = null; armed = null; go("use", it); return; }
     picked = it; armed = null;
     trial = withItem(S.look, it);
     HEHAvatar.applyTheme(trial);
     paintHero(); markOn();
-    if (window.innerWidth < 640) document.getElementById("hero").scrollIntoView({ behavior:"smooth", block:"start" });
   };
   return c;
 }
@@ -426,7 +497,7 @@ function filtersBar(){
 }
 
 /* ---------- the tabs ---------- */
-var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["character","🧑 Character"],["art","🎨 Art"],["tags","🏷️ Tags"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
+var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["wallet","💳 Wallet"],["cards","🎴 Card designs"],["trade","🤝 Trade"],["character","🧑 Character"],["art","🎨 Art"],["tags","🏷️ Tags"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
             ["limited","⏳ Limited"],["earned","🏅 Earned & special"],["achievements","🏆 Achievements"],["credits","Credits"]];
 var listHost = null, listFn = null;
 function renderList(){ if (listHost && listFn) { listHost.textContent = ""; listHost.appendChild(listFn()); markOn(); } }
@@ -438,7 +509,7 @@ function render(){
     b.onclick = function(){ view.tab = x[0]; view.opt = null; location.hash = x[0]; render(); };
     t.appendChild(b);
   });
-  ({ week:tabWeek, owned:tabOwned, tags:tabTags, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
+  ({ week:tabWeek, owned:tabOwned, wallet:tabWallet, cards:tabSimple("card","Debit card designs","How your Launchpad debit card looks in your wallet."), trade:tabTrade, tags:tabTags, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
      theme:tabSimple("theme","Dashboard themes","Changes the colours and the background of your dashboard. Tap one to see it right here."),
      limited:tabLimited, earned:tabEarned, achievements:tabAch, credits:tabCredits })[view.tab](v);
   markOn();
@@ -478,7 +549,7 @@ function tabTags(v){
   v.appendChild(grid(tags.filter(function(i){ return i.only; })));
 }
 /* Everything you own (not the free starter things), split into exclusive and everyday. */
-function isExclusive(it){ return !!(it.only || it.ach || it.days || it.stock || it.rotating || ["legendary","mythic","event","staff","unique"].indexOf(it.rarity) >= 0); }
+function isExclusive(it){ return !!(it.only || it.ach || it.days || it.stock || it.rotating || ["legendary","mythic","exotic","relic","event","staff","unique"].indexOf(it.rarity) >= 0); }
 function tabOwned(v){
   var mine = C.items.filter(function(i){ return !isFree(i) && has(i); });
   var ex = mine.filter(isExclusive), reg = mine.filter(function(i){ return !isExclusive(i); });
@@ -488,7 +559,7 @@ function tabOwned(v){
   var byRare = function(a, b){ return RAR.indexOf(b.rarity) - RAR.indexOf(a.rarity) || a.name.localeCompare(b.name); };
   v.appendChild(h("h2", "sec", "✨ Exclusive (" + ex.length + ")"));
   v.appendChild(h("p", "lead", "Rare finds: Legendary, Mythic, limited copies, achievement rewards, special-day items, and staff or one-of-a-kind items."));
-  var KIND = { bg:"Background", pattern:"Pattern", face:"Emoji character", frame:"Frame", hat:"Hat", sticker:"Sticker", name:"Name colour", theme:"Theme", tag:"Tag", style:"Character style", char:"Character part" };
+  var KIND = { card:"Debit card", bg:"Background", pattern:"Pattern", face:"Emoji character", frame:"Frame", hat:"Hat", sticker:"Sticker", name:"Name colour", theme:"Theme", tag:"Tag", style:"Character style", char:"Character part" };
   var labelled = function(g){ if (g.querySelectorAll) g.querySelectorAll(".card").forEach(function(c){ var it = BY[c.dataset.id]; if (it && KIND[it.part]) c.insertBefore(h("span", "own", KIND[it.part]), c.querySelector(".price")); }); return g; };
   v.appendChild(labelled(grid(ex.sort(byRare), "Nothing exclusive yet - earn achievements, save up Pounds, or come back on a special day.")));
   v.appendChild(h("h2", "sec", "Everything else (" + reg.length + ")"));
@@ -516,6 +587,7 @@ function tick(el){
 function tabCharacter(v){
   v.appendChild(h("h2", "sec", "Character"));
   v.appendChild(h("p", "lead", "Pick a style, then build your character part by part. Your emoji character stays in the Art tab."));
+  if (S.photo && S.photo.allowed) v.appendChild(photoBox());
   var styles = h("div", "styles");
   var emojiStyle = { id:"emoji", name:"Emoji", rarity:"common" };
   [emojiStyle].concat(C.items.filter(function(i){ return i.part === "style"; })).forEach(function(it){
@@ -530,7 +602,8 @@ function tabCharacter(v){
     styles.appendChild(c);
   });
   v.appendChild(styles);
-  var st = trial.style && trial.style !== "emoji" ? trial.style : (S.look.style !== "emoji" ? S.look.style : "adventurer");
+  var isChar = function(x){ return x && C.styles[x]; };
+  var st = isChar(trial.style) ? trial.style : (isChar(S.look.style) ? S.look.style : "adventurer");
   var parts = C.items.filter(function(i){ return i.part === "char" && i.style === st; });
   var opts = []; parts.forEach(function(i){ if (opts.indexOf(i.opt) < 0) opts.push(i.opt); });
   if (!view.opt || opts.indexOf(view.opt) < 0) view.opt = opts.filter(function(o){ return !/Color$/.test(o); })[0] || opts[0];
@@ -545,6 +618,277 @@ function tabCharacter(v){
   v.appendChild(sub);
   withList(v, function(){ return grid(filtered(parts.filter(function(i){ return i.opt === view.opt; }))); });
 }
+/* ---------- your own photo (a reward the owner switches on) ---------- */
+function photoBox(){
+  var ph = S.photo, box = h("div", "photobox");
+  var pv = h("div", "photopv");
+  if (ph.img) { var im = h("img"); im.src = ph.img; im.alt = "Your photo"; pv.appendChild(im); } else pv.textContent = "📷";
+  box.appendChild(pv);
+  var mid = h("div", "photomid");
+  mid.appendChild(h("b", null, "📷 Your own photo"));
+  var said = !ph.img ? "You've been given a reward: you can use your own photo as your picture. It's checked before anyone else sees it."
+    : ph.status === "pending" ? "Waiting to be checked - only you can see it for now."
+    : ph.status === "no" ? "This one wasn't approved. Try a different picture."
+    : "Approved! Everyone sees it in the chat and on the noticeboard when you wear it.";
+  mid.appendChild(h("p", "note", said));
+  var acts = h("div", "acts");
+  var file = h("input"); file.type = "file"; file.accept = "image/*"; file.hidden = true;
+  var up = h("button", "btn", ph.img ? "Change photo" : "Upload a photo"); up.type = "button"; up.onclick = function(){ file.click(); };
+  file.onchange = function(){ var f = file.files && file.files[0]; if (f) uploadPhoto(f, up); };
+  acts.appendChild(up); acts.appendChild(file);
+  if (ph.img && ph.status === "ok") {
+    var wearing = S.look.style === "photo";
+    var w = h("button", "btn gold", wearing ? "You're wearing it" : "Wear my photo"); w.type = "button"; w.disabled = wearing;
+    w.onclick = function(){ call({ action:"outfit", look: Object.assign(clone(S.look), { style:"photo" }) }).then(function(st){ S = st; trial = clone(S.look); paintHero(); render(); toast("Wearing your photo."); }).catch(function(e){ toast(e.message, true); }); };
+    acts.appendChild(w);
+  }
+  if (ph.img) {
+    var rm = h("button", "btn ghost", "Remove"); rm.type = "button";
+    rm.onclick = function(){ call({ action:"photoRemove" }).then(function(st){ S = st; trial = clone(S.look); paintHero(); render(); }).catch(function(e){ toast(e.message, true); }); };
+    acts.appendChild(rm);
+  }
+  mid.appendChild(acts); box.appendChild(mid);
+  return box;
+}
+/* Squares the picture and shrinks it to 256px, drawing it again as a
+   JPEG - which also leaves behind any hidden location data. */
+function uploadPhoto(f, btn){
+  if (!/^image\//.test(f.type)) { toast("That isn't a picture.", true); return; }
+  btn.disabled = true; btn.textContent = "Uploading…";
+  var url = URL.createObjectURL(f), img = new Image();
+  img.onload = function(){
+    var n = Math.min(img.naturalWidth, img.naturalHeight), cv = document.createElement("canvas");
+    cv.width = cv.height = 256;
+    cv.getContext("2d").drawImage(img, (img.naturalWidth - n) / 2, (img.naturalHeight - n) / 2, n, n, 0, 0, 256, 256);
+    URL.revokeObjectURL(url);
+    call({ action:"photo", img: cv.toDataURL("image/jpeg", 0.82) }).then(function(st){
+      S = st; render(); toast(S.photo.status === "ok" ? "Photo saved!" : "Sent! It'll show once it's been checked.");
+    }).catch(function(e){ toast(e.message, true); render(); });
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); toast("Couldn't open that picture.", true); render(); };
+  img.src = url;
+}
+
+/* ---------- wallet: your debit card, a statement, saving up ---------- */
+var STMT = null;
+var TIPS = [
+  ["Needs and wants", "A need is something you must have; a want is something nice to have. Wants are fine - just know which is which before you spend."],
+  ["Save a little, often", "Putting a few pence aside every day adds up faster than you'd think. Pick a goal and watch the bar fill."],
+  ["Compare prices", "The same thing can cost less in a sale. The weekly shop has 25% off some items - waiting can save you money."],
+  ["Think before you buy", "Some things can never be bought back once they sell out, and your pence can't be un-spent. Sleep on big buys."],
+  ["A fair trade", "A good trade is one where both people are happy. Never let anyone rush or pressure you into one."],
+  ["Read your statement", "Banks send statements so you can see where your money went. Check yours - is it what you expected?"],
+  ["Pence and pounds", "In real money, 100 pence make £1. Here they're separate: pence come often, Launchpad Pounds are rare - like saving up for something special."],
+  ["Budgets", "A budget is a plan for your money: how much comes in, and where you'll let it go. Try one for your next week of pence."]
+];
+function label(key){
+  var m;
+  if (key === "start") return "🎉 Welcome bonus";
+  if (key === "levelup") return "🚀 Level Up";
+  if (key === "gift" || /^gift:/.test(key)) return "🎁 Gift from the founder";
+  if ((m = /^day:[^:]+:(.+)$/.exec(key))) return "🏁 Milestone: " + m[1];
+  if (/^luck:/.test(key)) return "🍀 Lucky Pound!";
+  if ((m = /^ach:(.+)$/.exec(key))) return "🏅 Achievement: " + achName(m[1]);
+  if ((m = /^buy:(.+)$/.exec(key))) return "🛍️ Bought: " + (BY[m[1]] ? BY[m[1]].name : m[1]);
+  if (/^trade:/.test(key)) return "🤝 Trade";
+  if ((m = /^learn:(.+)$/.exec(key))) return "📚 Right answers: " + m[1];
+  if ((m = /^play:(.+)$/.exec(key))) return "🎮 Played: " + m[1];
+  return key;
+}
+function goalGet(){ try { return localStorage.getItem("hl.shop.goal") || ""; } catch (e) { return ""; } }
+function goalSet(id){ try { if (id) localStorage.setItem("hl.shop.goal", id); else localStorage.removeItem("hl.shop.goal"); } catch (e) {} }
+function tabWallet(v){
+  v.appendChild(h("h2", "sec", "Wallet"));
+  /* the card */
+  var cd = BY[S.look.card] || BY["cd-classic"];
+  var dc = h("div", "debit"); dc.style.background = cd ? cd.v : "";
+  var light = cd && /holo|diamond/.test(cd.id);
+  if (light) dc.classList.add("light");
+  dc.appendChild(h("span", "dbank", "LAUNCHPAD BANK"));
+  dc.appendChild(h("span", "dchip"));
+  var bal = h("div", "dbal");
+  bal.appendChild(h("span", null, S.pts.toLocaleString() + "p"));
+  bal.appendChild(h("span", null, "🪙 " + S.pounds.toLocaleString()));
+  dc.appendChild(bal);
+  var hn = 0; String(me.email || me.name).split("").forEach(function(c){ hn = (hn * 31 + c.charCodeAt(0)) % 10000; });
+  var num = h("span", "dnum", "LP •••• " + String(hn).padStart(4, "0"));
+  dc.appendChild(num);
+  dc.appendChild(h("span", "dname", (me.name || "You").toUpperCase()));
+  dc.appendChild(h("span", "dkind", cd ? cd.name.toUpperCase() : "DEBIT"));
+  var row = h("div", "wallet"); row.appendChild(dc);
+  var side = h("div", "wside");
+  side.appendChild(h("p", "note", "This is your Launchpad debit card. It shows what you have: pence (p) from games, and rare Launchpad Pounds from achievements and lucky answers. Nothing here is real money - but the habits are real."));
+  var chg = h("button", "btn ghost", "Change card design"); chg.type = "button";
+  chg.onclick = function(){ view.tab = "cards"; location.hash = "cards"; render(); };
+  side.appendChild(chg);
+  row.appendChild(side);
+  v.appendChild(row);
+  /* saving up */
+  v.appendChild(h("h2", "sec", "🎯 Saving up"));
+  var gid = goalGet(), goal = BY[gid];
+  if (goal && has(goal)) { goalSet(""); goal = null; }
+  if (!goal) {
+    v.appendChild(h("p", "lead", "Pick something you want, and see how close you are. Tap \"🎯 Save for this\" in the bar at the bottom while trying something on - or choose one here."));
+    var pick = C.items.filter(function(i){ return !has(i) && (i.cost || i.pounds) && !i.only && !i.ach && !i.days; })
+      .sort(function(a, b){ return (b.pounds || 0) - (a.pounds || 0) || b.cost - a.cost; }).slice(0, 8);
+    v.appendChild(labelledSave(pick));
+  } else {
+    var p = priceOf(goal), box = h("div", "goal");
+    box.appendChild(pic(withItem(S.look, goal), 64));
+    var gm = h("div", "gmid");
+    gm.appendChild(h("b", null, goal.name + " - " + money(p.p, p.lp)));
+    var parts = [];
+    if (p.p) parts.push([Math.min(1, S.pts / p.p), Math.max(0, p.p - S.pts) + "p to go"]);
+    if (p.lp) parts.push([Math.min(1, S.pounds / p.lp), Math.max(0, p.lp - S.pounds) + " Pounds to go"]);
+    parts.forEach(function(x){ var b = h("span", "bar"), f = h("span"); f.style.width = Math.round(100 * x[0]) + "%"; b.appendChild(f); gm.appendChild(b); gm.appendChild(h("small", null, x[0] >= 1 ? "✓ Got enough!" : x[1])); });
+    box.appendChild(gm);
+    var x = h("button", "btn ghost", "Change goal"); x.type = "button"; x.onclick = function(){ goalSet(""); render(); };
+    box.appendChild(x);
+    v.appendChild(box);
+  }
+  /* money tip */
+  var tip = TIPS[Math.floor(Date.now() / 86400000) % TIPS.length];
+  var tb = h("div", "tip"); tb.appendChild(h("b", null, "💡 Money tip: " + tip[0])); tb.appendChild(h("p", null, tip[1])); v.appendChild(tb);
+  /* statement */
+  v.appendChild(h("h2", "sec", "🧾 Statement"));
+  v.appendChild(h("p", "lead", "Every pence and Pound in and out, newest first - like the statement a bank sends you."));
+  var host = h("div"); v.appendChild(host);
+  function draw(){
+    host.textContent = "";
+    if (!STMT) { host.appendChild(h("p", "empty", "Loading your statement…")); return; }
+    var rows = STMT.pence.map(function(r){ return { key:r.key, p:r.amount, lp:0, at:r.at }; })
+      .concat(STMT.pounds.map(function(r){ return { key:r.key, p:0, lp:r.amount, at:r.at }; }))
+      .sort(function(a, b){ return String(b.at).localeCompare(String(a.at)); });
+    /* Level Up saves often: fold a day's Level Up / right answers into one line each. */
+    var out = [], seen = {};
+    rows.forEach(function(r){
+      var day = String(r.at).slice(0, 10), k = /^(levelup|learn:|play:)/.test(r.key) ? day + "|" + r.key : null;
+      if (k && seen[k]) { seen[k].p += r.p; seen[k].lp += r.lp; seen[k].n++; return; }
+      var row = { key:r.key, p:r.p, lp:r.lp, at:r.at, n:1 }; if (k) seen[k] = row; out.push(row);
+    });
+    if (!out.length) { host.appendChild(h("p", "empty", "Nothing yet - play a game to earn your first pence!")); return; }
+    var t = h("table", "stmt"), hd = h("tr");
+    ["Date", "What", "Pence", "Pounds"].forEach(function(x){ hd.appendChild(h("th", null, x)); });
+    t.appendChild(hd);
+    out.slice(0, 60).forEach(function(r){
+      var tr = h("tr");
+      var dt = new Date(r.at); tr.appendChild(h("td", null, isNaN(dt) ? "" : dt.toLocaleDateString([], { day:"numeric", month:"short" })));
+      tr.appendChild(h("td", null, label(r.key) + (r.n > 1 ? " ×" + r.n : "")));
+      var a = h("td", r.p > 0 ? "in" : r.p < 0 ? "out" : "", r.p ? (r.p > 0 ? "+" : "−") + Math.abs(r.p) + "p" : "");
+      var b = h("td", r.lp > 0 ? "in" : r.lp < 0 ? "out" : "", r.lp ? (r.lp > 0 ? "+" : "−") + Math.abs(r.lp) : "");
+      tr.appendChild(a); tr.appendChild(b); t.appendChild(tr);
+    });
+    host.appendChild(t);
+  }
+  draw();
+  call({ action:"statement" }).then(function(d){ STMT = d; if (document.body.contains(host)) draw(); }, function(){});
+}
+function labelledSave(list){
+  var g = h("div", "grid");
+  list.forEach(function(it){
+    var c = card(it);
+    c.onclick = function(){ goalSet(it.id); render(); toast("Saving up for " + it.name + "."); };
+    g.appendChild(c);
+  });
+  return g;
+}
+
+/* ---------- trading ---------- */
+var TR = { people:null, trades:null, to:"", theirs:null, give:{}, want:{}, gp:0, gl:0, wp:0, wl:0 };
+function tradeable(it){ return it && !it.only && !it.ach && !it.days && !isFree(it); }
+function sideText(x){
+  var b = (x.items || []).map(function(id){ return BY[id] ? BY[id].name : id; });
+  if (x.pence) b.push(x.pence + "p"); if (x.pounds) b.push("🪙 " + x.pounds);
+  return b.join(", ") || "nothing";
+}
+function tabTrade(v){
+  v.appendChild(h("h2", "sec", "Trade"));
+  v.appendChild(h("p", "lead", "Swap things you've bought with friends. Nothing changes hands until the other person says yes. Achievement badges, special-day items and staff items can't be traded."));
+  var host = h("div"); v.appendChild(host);
+  function load(){
+    Promise.all([TR.people ? Promise.resolve({ people:TR.people }) : call({ action:"players" }), call({ action:"trades" })]).then(function(x){
+      TR.people = x[0].people; TR.trades = x[1].trades; if (document.body.contains(host)) draw();
+    }).catch(function(e){ host.textContent = ""; host.appendChild(h("p", "empty", e.message)); });
+  }
+  function act(action, id){
+    call({ action:action, id:id }).then(function(st){
+      if (st && st.look) { S = st; trial = clone(S.look); paintChips(); paintHero(); loadCounts(); }
+      toast(action === "tradeAccept" ? "Trade done! 🤝" : action === "tradeDecline" ? "Offer turned down." : "Offer cancelled.");
+      load();
+    }).catch(function(e){ toast(e.message, true); load(); });
+  }
+  function draw(){
+    host.textContent = "";
+    var open = TR.trades.filter(function(t){ return t.status === "open"; });
+    var inc = open.filter(function(t){ return !t.mine; }), out = open.filter(function(t){ return t.mine; });
+    host.appendChild(h("h2", "sec", "📬 Offers for you (" + inc.length + ")"));
+    if (!inc.length) host.appendChild(h("p", "note", "No offers right now."));
+    inc.forEach(function(t){
+      var r = h("div", "trow");
+      r.appendChild(h("p", null, t.who + " gives you: " + sideText(t.give)));
+      r.appendChild(h("p", null, "…and wants: " + sideText(t.want)));
+      var a = h("div", "acts");
+      var y = h("button", "btn", "Accept"); y.type = "button"; y.onclick = function(){ y.disabled = true; act("tradeAccept", t.id); };
+      var n = h("button", "btn ghost", "No thanks"); n.type = "button"; n.onclick = function(){ act("tradeDecline", t.id); };
+      a.appendChild(y); a.appendChild(n); r.appendChild(a); host.appendChild(r);
+    });
+    host.appendChild(h("h2", "sec", "📤 Your offers (" + out.length + ")"));
+    if (!out.length) host.appendChild(h("p", "note", "You haven't offered anything."));
+    out.forEach(function(t){
+      var r = h("div", "trow");
+      r.appendChild(h("p", null, "To " + t.who + ": you give " + sideText(t.give) + " for " + sideText(t.want)));
+      var c = h("button", "btn ghost", "Cancel"); c.type = "button"; c.onclick = function(){ act("tradeCancel", t.id); };
+      r.appendChild(c); host.appendChild(r);
+    });
+    /* new offer */
+    host.appendChild(h("h2", "sec", "✍️ Make an offer"));
+    var sel = h("select", "tsel"); sel.setAttribute("aria-label", "Who to trade with");
+    var o0 = h("option", null, "Pick someone…"); o0.value = ""; sel.appendChild(o0);
+    TR.people.forEach(function(p){ var o = h("option", null, p.name); o.value = p.id; if (p.id === TR.to) o.selected = true; sel.appendChild(o); });
+    sel.onchange = function(){ TR.to = sel.value; TR.want = {}; TR.theirs = null; draw();
+      if (TR.to) call({ action:"inventory", id:TR.to }).then(function(d){ TR.theirs = d.items; draw(); }, function(e){ toast(e.message, true); }); };
+    host.appendChild(sel);
+    if (!TR.to) return;
+    var mine = S.owned.filter(function(id){ return tradeable(BY[id]); });
+    host.appendChild(h("h3", "tsub", "You give"));
+    host.appendChild(pickGrid(mine, TR.give, "You haven't bought anything you can trade yet."));
+    host.appendChild(moneyRow("gp", "gl", "And some money:"));
+    host.appendChild(h("h3", "tsub", "You get"));
+    host.appendChild(TR.theirs ? pickGrid(TR.theirs, TR.want, "They don't have anything to trade yet.") : h("p", "note", "Looking at what they have…"));
+    host.appendChild(moneyRow("wp", "wl", "And money from them:"));
+    var send = h("button", "btn", "Send offer"); send.type = "button";
+    send.onclick = function(){
+      var give = { items:Object.keys(TR.give), pence:TR.gp, pounds:TR.gl }, want = { items:Object.keys(TR.want), pence:TR.wp, pounds:TR.wl };
+      send.disabled = true;
+      call({ action:"tradeOffer", to:TR.to, give:give, want:want }).then(function(){
+        toast("Offer sent! They'll see it in their Trade tab."); TR.give = {}; TR.want = {}; TR.gp = TR.gl = TR.wp = TR.wl = 0; load();
+      }).catch(function(e){ send.disabled = false; toast(e.message, true); });
+    };
+    var a2 = h("div", "acts"); a2.appendChild(send); host.appendChild(a2);
+  }
+  function pickGrid(ids, chosen, empty){
+    if (!ids.length) return h("p", "note", empty);
+    var g = h("div", "grid tgrid");
+    ids.map(function(id){ return BY[id]; }).filter(tradeable).forEach(function(it){
+      var c = card(it); c.classList.toggle("on", !!chosen[it.id]);
+      c.onclick = function(){ if (chosen[it.id]) delete chosen[it.id]; else chosen[it.id] = 1; c.classList.toggle("on", !!chosen[it.id]); };
+      g.appendChild(c);
+    });
+    return g;
+  }
+  function moneyRow(pk, lk, text){
+    var r = h("div", "mrow"); r.appendChild(h("span", "note", text));
+    [[pk, "p"], [lk, "🪙"]].forEach(function(x){
+      var i = h("input", "tnum"); i.type = "number"; i.min = "0"; i.step = "1"; i.value = String(TR[x[0]] || 0); i.setAttribute("aria-label", x[1] === "p" ? "Pence" : "Launchpad Pounds");
+      i.oninput = function(){ TR[x[0]] = Math.max(0, Math.floor(Number(i.value) || 0)); };
+      var l = h("label", "tl"); l.appendChild(i); l.appendChild(h("span", null, x[1])); r.appendChild(l);
+    });
+    return r;
+  }
+  if (TR.trades) draw(); else host.appendChild(h("p", "empty", "Loading trades…"));
+  load();
+}
+
 function tabArt(v){
   v.appendChild(h("h2", "sec", "Art"));
   var sub = h("div", "sub");
