@@ -190,6 +190,10 @@ body.docked footer{padding-bottom:100px}
 .treview{margin-top:8px}
 .tick{display:flex;align-items:center;gap:6px;font-size:.86rem;margin:6px 0}
 .btn.danger{background:#dc2626;border-color:#dc2626;color:#fff}
+.mgrid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.mbox{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:16px;background:var(--card);border:1px solid var(--rule)}
+.mbox .card{width:100%}
+.mprice{font-size:1rem}
 .tsel{padding:10px 12px;border-radius:12px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit;margin-bottom:6px;max-width:100%}
 .tsub{margin:14px 0 6px;font-size:1rem}
 .mrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
@@ -230,7 +234,7 @@ footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 3
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
 <script src="https://civilinitiatives.org/auth-store.js?b=20261026a"></script>
-<script src="https://civilinitiatives.org/avatar.js?b=20261028h"></script>
+<script src="https://civilinitiatives.org/avatar.js?b=20261028i"></script>
 </head>
 <body>
 <header class="top">
@@ -562,7 +566,7 @@ function filtersBar(){
 }
 
 /* ---------- the tabs ---------- */
-var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["wallet","💳 Wallet"],["cards","🎴 Card designs"],["trade","🤝 Trade"],["character","🧑 Character"],["art","🎨 Art"],["tags","🏷️ Tags"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
+var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["wallet","💳 Wallet"],["cards","🎴 Card designs"],["trade","🤝 Trade"],["market","🏪 Market"],["character","🧑 Character"],["art","🎨 Art"],["tags","🏷️ Tags"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
             ["limited","⏳ Limited"],["earned","🏅 Earned & special"],["achievements","🏆 Achievements"],["credits","Credits"]];
 var listHost = null, listFn = null;
 function renderList(){ if (listHost && listFn) { listHost.textContent = ""; listHost.appendChild(listFn()); markOn(); } }
@@ -574,7 +578,7 @@ function render(){
     b.onclick = function(){ view.tab = x[0]; view.opt = null; location.hash = x[0]; render(); };
     t.appendChild(b);
   });
-  ({ week:tabWeek, owned:tabOwned, wallet:tabWallet, cards:tabSimple("card","Debit card designs","How your Launchpad debit card looks in your wallet."), trade:tabTrade, tags:tabTags, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
+  ({ week:tabWeek, owned:tabOwned, wallet:tabWallet, cards:tabSimple("card","Debit card designs","How your Launchpad debit card looks in your wallet."), trade:tabTrade, market:tabMarket, tags:tabTags, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
      theme:tabSimple("theme","Dashboard themes","Changes the colours and the background of your dashboard. Tap one to see it right here."),
      limited:tabLimited, earned:tabEarned, achievements:tabAch, credits:tabCredits })[view.tab](v);
   markOn();
@@ -1031,6 +1035,94 @@ function tabTrade(v){
   load();
 }
 
+/* ---------- the market: buy from other players, or sell yours ---------- */
+var MK = { pick:null, p:0, lp:0 };
+function tabMarket(v){
+  v.appendChild(h("h2", "sec", "Market"));
+  v.appendChild(h("p", "lead", "Things other players are selling, at the price they chose. Whoever pays first gets it. Or put something of yours up for sale - it stays yours until someone buys it."));
+  v.appendChild(h("div", "tsafe", "🛡️ Safe buying: the price can't change once it's up, you get 3 seconds to check before paying, and if the seller trades it away first, the sale just stops."));
+  var host = h("div"); v.appendChild(host);
+  host.appendChild(h("p", "empty", "Opening the market…"));
+  function warn(lines){ var w = h("div", "twarn"); w.appendChild(h("b", null, "⚠️ Stop and check")); (lines || []).forEach(function(x){ w.appendChild(h("p", null, x)); }); return w; }
+  function load(){ call({ action:"market" }).then(function(d){ MK.data = d; if (document.body.contains(host)) draw(); }).catch(function(e){ host.textContent = ""; host.appendChild(h("p", "empty", e.message)); }); }
+  function draw(){
+    host.textContent = "";
+    var all = MK.data.listings, theirs = all.filter(function(l){ return !l.mine; }), mine = all.filter(function(l){ return l.mine; });
+    host.appendChild(h("h2", "sec", "🏷️ For sale (" + theirs.length + ")"));
+    if (!theirs.length) host.appendChild(h("p", "note", "Nothing for sale right now - check back later."));
+    var g = h("div", "grid mgrid"); host.appendChild(g);
+    theirs.forEach(function(l){
+      var it = BY[l.item]; if (!it) return;
+      var box = h("div", "mbox"); box.appendChild(card(it));
+      box.appendChild(h("small", "note", "Sold by " + l.seller));
+      box.appendChild(h("b", "mprice", money(l.pence, l.pounds)));
+      var buy = h("button", "btn", "Buy"); buy.type = "button";
+      if (has(it)) { buy.disabled = true; buy.textContent = "You have one"; }
+      buy.onclick = function(){
+        /* a 3-second look before paying */
+        var n = 3; buy.disabled = true; buy.textContent = "Pay " + money(l.pence, l.pounds) + " (" + n + ")";
+        var iv = setInterval(function(){ n--; if (n > 0) buy.textContent = "Pay " + money(l.pence, l.pounds) + " (" + n + ")";
+          else { clearInterval(iv); buy.disabled = false; buy.textContent = "Pay " + money(l.pence, l.pounds); buy.classList.add("danger");
+            buy.onclick = function(){ buy.disabled = true; call({ action:"marketBuy", id:l.id }).then(function(st){
+              if (st && st.look) { S = st; trial = clone(S.look); paintChips(); paintHero(); loadCounts(); }
+              toast("It's yours! 🎉 " + it.name); load(); }).catch(function(e){ toast(e.message, true); load(); }); }; } }, 1000);
+      };
+      box.appendChild(buy); g.appendChild(box);
+    });
+    host.appendChild(h("h2", "sec", "📦 Your things for sale (" + mine.length + "/5)"));
+    if (!mine.length) host.appendChild(h("p", "note", "You're not selling anything."));
+    mine.forEach(function(l){
+      var it = BY[l.item]; if (!it) return;
+      var r = h("div", "trow"); r.appendChild(h("p", null, it.name + " for " + money(l.pence, l.pounds)));
+      var c = h("button", "btn ghost", "Take it down"); c.type = "button";
+      c.onclick = function(){ c.disabled = true; call({ action:"marketCancel", id:l.id }).then(function(){ toast("Taken down."); load(); }).catch(function(e){ toast(e.message, true); load(); }); };
+      var a = h("div", "acts"); a.appendChild(c); r.appendChild(a); host.appendChild(r);
+    });
+    var past = MK.data.history || [];
+    if (past.length) {
+      host.appendChild(h("h2", "sec", "🧾 Your past sales"));
+      var W = { sold:"✅ sold", cancelled:"✖ taken down", gone:"⚠️ you didn't have it any more" };
+      past.forEach(function(l){ var it = BY[l.item]; host.appendChild(h("p", "note", (W[l.status] || l.status) + " · " + (it ? it.name : l.item) + " for " + money(l.pence, l.pounds))); });
+    }
+    /* sell something */
+    host.appendChild(h("h2", "sec", "💰 Sell something"));
+    var mineItems = S.owned.map(function(id){ return BY[id]; }).filter(function(it){ return tradeable(it) && !mine.some(function(l){ return l.item === it.id; }); });
+    if (!mineItems.length) { host.appendChild(h("p", "note", "You haven't got anything you can sell yet - bought items can be sold; achievement, special-day and staff items can't.")); return; }
+    var sg = h("div", "grid tgrid");
+    mineItems.forEach(function(it){ var c = card(it); c.classList.toggle("on", MK.pick === it.id);
+      c.onclick = function(){ MK.pick = it.id; [].forEach.call(sg.children, function(k){ k.classList.toggle("on", k === c); }); }; sg.appendChild(c); });
+    host.appendChild(sg);
+    var mr = h("div", "mrow"); mr.appendChild(h("span", "note", "Price:"));
+    [["p", "p"], ["lp", "🪙"]].forEach(function(x){
+      var i = h("input", "tnum"); i.type = "number"; i.min = "0"; i.step = "1"; i.value = String(MK[x[0]] || 0); i.setAttribute("aria-label", x[1] === "p" ? "Price in pence" : "Price in Launchpad Pounds");
+      i.oninput = function(){ MK[x[0]] = Math.max(0, Math.floor(Number(i.value) || 0)); };
+      var l = h("label", "tl"); l.appendChild(i); l.appendChild(h("span", null, x[1])); mr.appendChild(l);
+    });
+    host.appendChild(mr);
+    var go = h("button", "btn", "Put it up for sale"); go.type = "button";
+    var conf = h("div");
+    function sell(sure){
+      if (!MK.pick) { toast("Tap the thing you want to sell first.", true); return; }
+      go.disabled = true;
+      call({ action:"marketSell", item:MK.pick, pence:MK.p, pounds:MK.lp, sure:!!sure }).then(function(){
+        toast("It's up for sale! 🏷️"); MK.pick = null; MK.p = MK.lp = 0; load();
+      }).catch(function(e){
+        go.disabled = false;
+        if (!e.check) { toast(e.message, true); return; }
+        conf.textContent = ""; conf.appendChild(warn(e.check));
+        var y = h("button", "btn danger", "Sell anyway (3)"); y.type = "button"; y.disabled = true;
+        var n = 3, iv = setInterval(function(){ n--; y.textContent = n > 0 ? "Sell anyway (" + n + ")" : "Sell anyway"; if (n <= 0) { y.disabled = false; clearInterval(iv); } }, 1000);
+        y.onclick = function(){ conf.textContent = ""; sell(true); };
+        var no = h("button", "btn ghost", "Change the price"); no.type = "button"; no.onclick = function(){ conf.textContent = ""; };
+        var a3 = h("div", "acts"); a3.appendChild(y); a3.appendChild(no); conf.appendChild(a3);
+      });
+    }
+    go.onclick = function(){ conf.textContent = ""; sell(false); };
+    var a2 = h("div", "acts"); a2.appendChild(go); host.appendChild(a2); host.appendChild(conf);
+  }
+  load();
+}
+
 function tabArt(v){
   v.appendChild(h("h2", "sec", "Art"));
   var sub = h("div", "sub");
@@ -1048,7 +1140,7 @@ function tabSimple(part, title, lead){
 }
 function tabLimited(v){
   v.appendChild(h("h2", "sec", "Limited"));
-  v.appendChild(h("p", "lead", "Only so many copies will ever exist. When they're gone, they're gone - for good. They come up in the weekly shop."));
+  v.appendChild(h("p", "lead", "Only so many copies will ever exist - 5 at most, some just 3, 2 or 1. They're only sold in the weekly shop, and you can buy one limited item a week, so everyone gets a chance. Otherwise: trade for them, or look in the Market."));
   v.appendChild(grid(C.items.filter(function(i){ return i.stock; })));
 }
 function tabEarned(v){
@@ -1088,8 +1180,16 @@ function tabCredits(v){
   v.appendChild(ul);
 }
 
+var BASE_STOCK = null;
 function loadCounts(){
-  return call({ action:"stats" }).then(function(c){ COUNTS = c; if (S) { render(); paintHero(); } }, function(){});
+  return call({ action:"stats" }).then(function(c){
+    COUNTS = c;
+    /* the founder can change how many copies may exist */
+    if (!BASE_STOCK) { BASE_STOCK = {}; C.items.forEach(function(i){ if (i.stock) BASE_STOCK[i.id] = i.stock; }); }
+    var caps = (c && c.caps) || {};
+    C.items.forEach(function(i){ if (BASE_STOCK[i.id] || caps[i.id]) i.stock = caps[i.id] || BASE_STOCK[i.id]; });
+    if (S) { render(); paintHero(); }
+  }, function(){});
 }
 
 /* ---------- start ---------- */
