@@ -774,8 +774,11 @@ function label(key){
   if ((m = /^day:[^:]+:(.+)$/.exec(key))) return "🏁 Milestone: " + m[1];
   if (/^luck:/.test(key)) return "🍀 Lucky Pound!";
   if ((m = /^ach:(.+)$/.exec(key))) return "🏅 Achievement: " + achName(m[1]);
-  if ((m = /^buy:(.+)$/.exec(key))) return "🛍️ Bought: " + (BY[m[1]] ? BY[m[1]].name : m[1]);
+  if ((m = /^buy:([^:]+)/.exec(key))) return "🛍️ Bought: " + (BY[m[1]] ? BY[m[1]].name : m[1]);
   if (/^trade:/.test(key)) return "🤝 Trade";
+  if (/^market:/.test(key)) return "🏪 Market";
+  if (/^undo:/.test(key)) return "↩️ Trade undone by the founder";
+  if (/^time:/.test(key)) return "🎮 30 more minutes of Star Dash 3D";
   if ((m = /^learn:(.+)$/.exec(key))) return "📚 Right answers: " + m[1];
   if ((m = /^play:(.+)$/.exec(key))) return "🎮 Played: " + m[1];
   return key;
