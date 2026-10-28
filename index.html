@@ -108,6 +108,9 @@ p.lead{color:var(--soft);margin:0 0 12px;font-size:.9rem}
 .rar.relic{background:linear-gradient(90deg,#000,#f59e0b,#fff,#f59e0b,#000);background-size:200% 100%;animation:shim 2s linear infinite;color:#000}
 .card.exotic{border:2px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,#0891b2,#a5f3fc,#0e7490) border-box}
 .card.relic{border:3px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,conic-gradient(#000,#f59e0b,#fff,#ec4899,#22d3ee,#000) border-box;box-shadow:0 0 22px -6px #f59e0b}
+.rar.tester{background:linear-gradient(90deg,#15803d,#a3e635);color:#052e16}
+.card.tester{border:2px solid transparent;background:linear-gradient(var(--card),var(--card)) padding-box,linear-gradient(135deg,#15803d,#a3e635) border-box}
+.rf.tester[aria-pressed="true"]{background:#16a34a}
 .rf.exotic[aria-pressed="true"]{background:#0891b2} .rf.relic[aria-pressed="true"]{background:#000;color:#f59e0b}
 .card.event{border-color:color-mix(in srgb,var(--event) 45%,var(--rule))}
 .daybar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;margin:0 0 14px;border-radius:16px;color:#fff;
@@ -175,10 +178,26 @@ body.docked footer{padding-bottom:100px}
 .mrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
 .tl{display:inline-flex;align-items:center;gap:4px}
 .tnum{width:90px;padding:8px 10px;border-radius:10px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit}
+.paycard{position:relative;display:inline-flex;align-items:center;gap:10px;min-width:150px;height:52px;padding:0 14px 0 12px;
+  border:0;border-radius:12px;color:#fff;cursor:pointer;font:inherit;text-align:left;overflow:hidden;
+  box-shadow:0 8px 18px -10px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.18);transition:transform .15s}
+.paycard::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.25) 50%,transparent 65%);transform:translateX(-100%);transition:transform .5s}
+.paycard:hover{transform:translateY(-2px) rotate(-1.5deg)}
+.paycard:hover::after{transform:translateX(100%)}
+.paycard.light{color:#0f172a}
+.paycard .pchip{width:24px;height:18px;border-radius:4px;background:linear-gradient(135deg,#fde68a,#ca8a04 60%,#fef3c7);flex:none}
+.paycard .ptxt{display:flex;flex-direction:column;line-height:1.1}
+.paycard .ptxt small{font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.paycard .ptxt b{font-size:1rem}
+.paycard .pwave{margin-left:auto;font-weight:800;letter-spacing:-2px;transform:rotate(-90deg) scaleY(1.2);opacity:.8}
+.paycard.paying{animation:tap .45s ease forwards}
+@keyframes tap{0%{transform:none}40%{transform:translateY(-10px) scale(.96);box-shadow:0 0 0 6px rgba(34,197,94,.45)}100%{transform:none;box-shadow:0 0 0 14px rgba(34,197,94,0)}}
+@media (prefers-reduced-motion:reduce){ .paycard,.paycard::after{transition:none} .paycard.paying{animation:none} }
 .dock{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:10px;
   width:min(720px,calc(100vw - 24px));padding:10px 12px;border-radius:18px;background:var(--card);border:1px solid var(--rule);
   box-shadow:0 18px 40px -12px rgba(0,0,0,.45)}
 .dock .dmid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dock .dmid .rar{align-self:flex-start}
 .dock .dmid b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dock .btn{white-space:nowrap}
 @media (max-width:480px){ .dock .dmini{display:none} .dock .btn{padding:9px 12px;font-size:.85rem} }
@@ -194,7 +213,7 @@ footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 3
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
 <script src="https://civilinitiatives.org/auth-store.js?b=20261026a"></script>
-<script src="https://civilinitiatives.org/avatar.js?b=20261028d"></script>
+<script src="https://civilinitiatives.org/avatar.js?b=20261028e"></script>
 </head>
 <body>
 <header class="top">
@@ -221,8 +240,8 @@ var sb = null;
 try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true,
         storage:(window.HEHAuth && window.HEHAuth.storage) || undefined } }); } catch (e) {}
 
-var RAR = ["common", "rare", "epic", "legendary", "mythic", "exotic", "relic", "event", "staff", "unique"];
-var RNAME = { common:"Common", rare:"Rare", epic:"Epic", legendary:"Legendary", mythic:"Mythic", exotic:"Exotic", relic:"1 of 1", event:"Special day", staff:"Helper", unique:"One of a kind" };
+var RAR = ["common", "rare", "epic", "legendary", "mythic", "exotic", "relic", "event", "tester", "staff", "unique"];
+var RNAME = { common:"Common", rare:"Rare", epic:"Epic", legendary:"Legendary", mythic:"Mythic", exotic:"Exotic", relic:"1 of 1", event:"Special day", tester:"Tester", staff:"Helper", unique:"One of a kind" };
 var SIMPLE = ["bg", "pattern", "face", "frame", "hat", "sticker", "name", "theme", "tag", "card"];
 var ART = [["face","Emoji characters"],["bg","Backgrounds"],["pattern","Patterns"],["frame","Frames"],["hat","Hats"],["sticker","Stickers"]];
 var OPT_NAME = { hair:"Hair", top:"Hair & hats", eyes:"Eyes", eyebrows:"Eyebrows", brows:"Eyebrows", mouth:"Mouth", lips:"Mouth", glasses:"Glasses",
@@ -254,7 +273,7 @@ function call(body){
 }
 
 /* ---------- what an item costs, and whether you can have it ---------- */
-function isFree(it){ return !it.cost && !it.pounds && !it.ach && !it.only && !it.days; }
+function isFree(it){ return !it.cost && !it.pounds && !it.ach && !it.only && !it.days && !it.gift; }
 function dayOk(it){ var d = S.shop.today || ""; return !!it.days && it.days.some(function(x){ return x === d || x === d.slice(5); }); }
 function has(it){ return isFree(it) || S.owned.indexOf(it.id) >= 0; }
 function onSale(it){ return S.shop.sale.indexOf(it.id) >= 0; }
@@ -332,7 +351,7 @@ function paintDock(){
   var mid = h("span", "dmid"); mid.appendChild(h("span", "rar " + picked.rarity, RNAME[picked.rarity])); mid.lastChild.style.position = "static";
   mid.appendChild(h("b", null, picked.name)); d.appendChild(mid);
   d.appendChild(actionBtn(picked));
-  if (!has(picked) && (picked.cost || picked.pounds) && !picked.only && !picked.ach && !picked.days && goalGet() !== picked.id) {
+  if (!has(picked) && (picked.cost || picked.pounds) && !picked.only && !picked.gift && !picked.ach && !picked.days && goalGet() !== picked.id) {
     var sv = h("button", "btn ghost", "🎯 Save for this"); sv.type = "button"; sv.title = "Make it your savings goal (Wallet tab)";
     var it0 = picked; sv.onclick = function(){ goalSet(it0.id); toast("Saving up for " + it0.name + " - see your Wallet."); paintDock(); };
     d.appendChild(sv);
@@ -345,13 +364,14 @@ function howTo(it){
   var bits = [];
   if (it.only === "owner") bits.push("One of a kind: only the Launchpad's founder has this. It can never be bought.");
   else if (it.only === "helper") bits.push("Helpers only: every helper has this for as long as they're a helper.");
+  else if (it.gift) bits.push("A thank-you for the people who helped test the Launchpad. It can't be bought or traded - only the founder gives it.");
   else if (it.ach) bits.push("Can't be bought - earned with the " + achName(it.ach) + " achievement.");
   else if (it.days) bits.push(dayOk(it) ? "Today only! Free to claim - but only today (" + it.when + ")." : "Can only be claimed on " + it.when + ". Miss it and you'll have to wait.");
   else if (isFree(it)) bits.push("Free for everyone.");
   if (it.stock) bits.push(soldOut(it) ? "Sold out: all " + it.stock + " copies are owned." : "Limited: only " + it.stock + " ever - " + (it.stock - sold(it)) + " left.");
   if (it.rotating) bits.push(featured(it) ? "In this week's shop - it leaves on Monday." : "Only sold in weeks it's in the weekly shop.");
   if (onSale(it)) bits.push("25% off this week.");
-  if (!isFree(it) && !it.only) bits.push(ownedLine(it));
+  if (!isFree(it) && !it.only && !it.gift) bits.push(ownedLine(it));
   if (it.part === "char" && !styleOk(it)) bits.push("Unlock the " + BY["cs:" + it.style].name + " first.");
   return bits.join(" ");
 }
@@ -371,6 +391,7 @@ function actionBtn(it){
     return b;
   }
   if (it.only) { b.textContent = it.only === "owner" ? "👑 Founder only" : "🛟 Helpers only"; b.disabled = true; return b; }
+  if (it.gift) { b.textContent = "🧪 Given to testers"; b.disabled = true; return b; }
   if (it.ach) { b.textContent = "🏅 Earn it: " + achName(it.ach); b.disabled = true; return b; }
   if (it.days) {
     if (!dayOk(it)) { b.textContent = "📅 Only on its special day"; b.disabled = true; return b; }
@@ -383,11 +404,22 @@ function actionBtn(it){
   if (!styleOk(it)) { b.textContent = "Unlock the " + BY["cs:" + it.style].name + " first"; b.disabled = true; return b; }
   var p = priceOf(it), needP = Math.max(0, p.p - S.pts), needL = Math.max(0, p.lp - S.pounds);
   if (needP || needL) { b.textContent = "Need " + money(needP, needL) + " more"; b.disabled = true; return b; }
-  b.className = "btn " + (p.lp ? "gold" : "") + (armed === it.id ? " armed" : "");
-  b.textContent = armed === it.id ? "Tap again to buy for " + money(p.p, p.lp) : "Buy for " + money(p.p, p.lp);
+  return payCard(it, p);
+}
+/* Paying: tap your Launchpad debit card, like a contactless card. */
+function payCard(it, p){
+  var cd = BY[S.look.card] || BY["cd-classic"];
+  var b = h("button", "paycard"); b.type = "button";
+  b.style.background = cd ? cd.v : "";
+  if (cd && /holo|diamond/.test(cd.id)) b.classList.add("light");
+  b.setAttribute("aria-label", "Tap your card to pay " + money(p.p, p.lp) + " for " + it.name);
+  b.appendChild(h("span", "pchip"));
+  var t = h("span", "ptxt"); t.appendChild(h("small", null, "Tap to pay")); t.appendChild(h("b", null, money(p.p, p.lp))); b.appendChild(t);
+  b.appendChild(h("span", "pwave", ")))"));
   b.onclick = function(){
-    if (armed !== it.id) { armed = it.id; paintHero(); return; }
-    armed = null; go("buy", it);
+    if (b.classList.contains("paying")) return;
+    b.classList.add("paying");
+    setTimeout(function(){ go("buy", it); }, 450);
   };
   return b;
 }
@@ -441,12 +473,13 @@ function card(it){
   if (isWearing(it)) pr.textContent = "✓ Wearing";
   else if (mine) pr.textContent = isFree(it) ? "Free" : "✓ Owned";
   else if (it.only) pr.textContent = it.only === "owner" ? "👑 Founder only" : "🛟 Helpers only";
+  else if (it.gift) pr.textContent = "🧪 Tester reward";
   else if (it.ach) pr.textContent = "🏅 Achievement";
   else if (it.days) pr.textContent = dayOk(it) ? "🎁 Free today!" : "📅 Special day";
   else { var p = priceOf(it); pr.textContent = money(p.p, p.lp); if (p.lp) pr.classList.add("pd"); }
   c.appendChild(pr);
   if (it.days && !mine) c.appendChild(h("span", "when", it.when));
-  if (!isFree(it) && !it.only && COUNTS && COUNTS.total) {
+  if (!isFree(it) && !it.only && !it.gift && COUNTS && COUNTS.total) {
     var n = COUNTS.owners[it.id] || 0;
     c.appendChild(h("span", "own", !n ? "Nobody owns this yet" : n === 1 && mine ? "Only you own this!" : "Owned by " + n + (n === 1 ? " person" : " people")));
   }
@@ -549,7 +582,7 @@ function tabTags(v){
   v.appendChild(grid(tags.filter(function(i){ return i.only; })));
 }
 /* Everything you own (not the free starter things), split into exclusive and everyday. */
-function isExclusive(it){ return !!(it.only || it.ach || it.days || it.stock || it.rotating || ["legendary","mythic","exotic","relic","event","staff","unique"].indexOf(it.rarity) >= 0); }
+function isExclusive(it){ return !!(it.only || it.gift || it.ach || it.days || it.stock || it.rotating || ["legendary","mythic","exotic","relic","event","staff","unique"].indexOf(it.rarity) >= 0); }
 function tabOwned(v){
   var mine = C.items.filter(function(i){ return !isFree(i) && has(i); });
   var ex = mine.filter(isExclusive), reg = mine.filter(function(i){ return !isExclusive(i); });
@@ -729,7 +762,7 @@ function tabWallet(v){
   if (goal && has(goal)) { goalSet(""); goal = null; }
   if (!goal) {
     v.appendChild(h("p", "lead", "Pick something you want, and see how close you are. Tap \"🎯 Save for this\" in the bar at the bottom while trying something on - or choose one here."));
-    var pick = C.items.filter(function(i){ return !has(i) && (i.cost || i.pounds) && !i.only && !i.ach && !i.days; })
+    var pick = C.items.filter(function(i){ return !has(i) && (i.cost || i.pounds) && !i.only && !i.gift && !i.ach && !i.days; })
       .sort(function(a, b){ return (b.pounds || 0) - (a.pounds || 0) || b.cost - a.cost; }).slice(0, 8);
     v.appendChild(labelledSave(pick));
   } else {
@@ -795,7 +828,7 @@ function labelledSave(list){
 
 /* ---------- trading ---------- */
 var TR = { people:null, trades:null, to:"", theirs:null, give:{}, want:{}, gp:0, gl:0, wp:0, wl:0 };
-function tradeable(it){ return it && !it.only && !it.ach && !it.days && !isFree(it); }
+function tradeable(it){ return it && !it.only && !it.ach && !it.days && !it.gift && !isFree(it); }
 function sideText(x){
   var b = (x.items || []).map(function(id){ return BY[id] ? BY[id].name : id; });
   if (x.pence) b.push(x.pence + "p"); if (x.pounds) b.push("🪙 " + x.pounds);
@@ -913,6 +946,9 @@ function tabEarned(v){
   v.appendChild(h("h2", "sec", "Earned, never sold"));
   v.appendChild(h("p", "lead", "These can't be bought with anything - only earned with achievements."));
   v.appendChild(grid(C.items.filter(function(i){ return i.ach; })));
+  v.appendChild(h("h2", "sec", "🧪 Tester rewards"));
+  v.appendChild(h("p", "lead", "A thank-you for the people who had the patience to test the Launchpad. Never sold, never traded - the founder gives them."));
+  v.appendChild(grid(C.items.filter(function(i){ return i.gift === "tester"; })));
   v.appendChild(h("h2", "sec", "Helpers only"));
   v.appendChild(h("p", "lead", "Every helper has these for as long as they're a helper. Nobody else can get them."));
   v.appendChild(grid(C.items.filter(function(i){ return i.only === "helper"; })));
