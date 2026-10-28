@@ -310,7 +310,7 @@ function isFree(it){ return !it.cost && !it.pounds && !it.ach && !it.only && !it
 function dayOk(it){ var d = S.shop.today || ""; return !!it.days && it.days.some(function(x){ return x === d || x === d.slice(5); }); }
 function has(it){ return isFree(it) || S.owned.indexOf(it.id) >= 0; }
 function onSale(it){ return S.shop.sale.indexOf(it.id) >= 0; }
-function featured(it){ return S.shop.featured.indexOf(it.id) >= 0; }
+function featured(it){ return S.shop.featured.indexOf(it.id) >= 0 || (S.shop.daily || []).indexOf(it.id) >= 0; }
 function priceOf(it){
   var off = onSale(it) ? 0.75 : 1;
   return { p: it.cost ? Math.max(1, Math.round(it.cost * off)) : 0, lp: it.pounds ? Math.max(1, Math.round(it.pounds * off)) : 0 };
@@ -636,16 +636,23 @@ function tabOwned(v){
 }
 function tabWeek(v){
   dayBar(v);
+  var daily = (S.shop.daily || []).map(function(id){ return BY[id]; }).filter(Boolean);
+  if (daily.length) {
+    var dh = h("h2", "sec", "☀️ Today's deals"); var dc = h("span", "countdown"); dh.appendChild(dc); v.appendChild(dh);
+    tick(dc, S.shop.dailyResets);
+    v.appendChild(h("p", "lead", "New ones every day at midnight - here today, gone tomorrow."));
+    v.appendChild(grid(daily));
+  }
   var hd = h("h2", "sec", "This week's shop"); var cd = h("span", "countdown"); hd.appendChild(cd); v.appendChild(hd);
   tick(cd);
   v.appendChild(h("p", "lead", "Changes every Monday. Mythic items are only sold in the weeks they're here, and only a few copies will ever exist - everything else here is 25% off this week."));
   var items = S.shop.featured.map(function(id){ return BY[id]; }).filter(Boolean);
   v.appendChild(grid(items));
 }
-function tick(el){
+function tick(el, when){
   function f(){
     if (!document.body.contains(el)) return;
-    var ms = Date.parse(S.shop.resets) - Date.now();
+    var ms = Date.parse(when || S.shop.resets) - Date.now();
     if (ms <= 0) { el.textContent = "New items now - refresh!"; return; }
     var dd = Math.floor(ms / 86400000), hh = Math.floor(ms % 86400000 / 3600000), mm = Math.floor(ms % 3600000 / 60000), ss = Math.floor(ms % 60000 / 1000);
     el.textContent = "New items in " + (dd ? dd + "d " : "") + hh + "h " + String(mm).padStart(2, "0") + "m " + String(ss).padStart(2, "0") + "s";
