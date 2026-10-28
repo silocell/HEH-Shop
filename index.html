@@ -190,6 +190,8 @@ body.docked footer{padding-bottom:100px}
 .treview{margin-top:8px}
 .tick{display:flex;align-items:center;gap:6px;font-size:.86rem;margin:6px 0}
 .btn.danger{background:#dc2626;border-color:#dc2626;color:#fff}
+.daybox{margin:0 0 18px;padding:10px;border-radius:18px;border:2px dashed #f59e0b;background:color-mix(in srgb,#f59e0b 8%,transparent)}
+.daybox .daybar{margin:0 0 10px}
 .mgrid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 .mbox{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:16px;background:var(--card);border:1px solid var(--rule)}
 .mbox .card{width:100%}
@@ -591,15 +593,22 @@ function withList(v, fn, filters){
 function dayBar(v){
   var items = (S.shop.dayItems || []).map(function(id){ return BY[id]; }).filter(function(it){ return it && !has(it); });
   if (!items.length) return;
-  items.forEach(function(it){
-    var bar = h("div", "daybar");
-    var t = HEHAvatar.tagEl(it.id); if (t) bar.appendChild(t);
-    var txt = h("span"); txt.appendChild(h("b", null, "Today only: " + it.name)); txt.appendChild(h("div", null, "Free to claim - only on " + it.when + "."));
-    bar.appendChild(txt); bar.appendChild(h("span", "sp"));
-    var b = h("button", "btn", "Claim it"); b.type = "button"; b.onclick = function(){ go("buy", it); };
-    bar.appendChild(b);
-    v.appendChild(bar);
-  });
+  var box = h("div", "daybox");
+  var top = h("div", "daybar");
+  var txt = h("span"); txt.appendChild(h("b", null, "🎉 Today only - free to claim"));
+  txt.appendChild(h("div", null, "For " + items[0].when + ". Tap one to try it on."));
+  top.appendChild(txt); top.appendChild(h("span", "sp"));
+  var all = h("button", "btn", items.length > 1 ? "Claim all " + items.length : "Claim it"); all.type = "button";
+  all.onclick = function(){
+    all.disabled = true; all.textContent = "Claiming…";
+    /* one at a time, then show the lot */
+    items.reduce(function(p, it){ return p.then(function(){ return call({ action:"buy", item:it.id }).then(function(st){ S = st; }); }); }, Promise.resolve())
+      .then(function(){ toast("All yours! 🎉"); }, function(e){ toast(e.message, true); })
+      .then(function(){ trial = clone(S.look); HEHAvatar.applyTheme(trial); paintChips(); paintHero(); loadCounts(); render(); });
+  };
+  top.appendChild(all); box.appendChild(top);
+  box.appendChild(grid(items));
+  v.appendChild(box);
 }
 function tabTags(v){
   dayBar(v);
