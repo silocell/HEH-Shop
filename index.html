@@ -173,6 +173,17 @@ body.docked footer{padding-bottom:100px}
 .stmt td.in{color:var(--good);font-weight:700}.stmt td.out{color:var(--bad);font-weight:700}
 .trow{padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--rule);margin-bottom:8px}
 .trow p{margin:0 0 6px}
+.tsafe{font-size:.82rem;padding:10px 12px;border-radius:12px;background:var(--card);border:1px dashed var(--rule);margin:0 0 6px;color:var(--soft)}
+.fair{margin:6px 0}
+.fbar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--rule);max-width:360px}
+.fgive{background:#f97316}.fget{background:#22c55e}
+.fair small{display:block;margin-top:4px;font-size:.78rem}
+.fbad{color:#dc2626;font-weight:700}.fgood{color:#16a34a;font-weight:600}.fok{color:var(--soft)}
+.twarn{border:2px solid #dc2626;background:rgba(220,38,38,.08);border-radius:12px;padding:10px 12px;margin:8px 0}
+.twarn b{color:#dc2626}.twarn p{margin:4px 0 0;font-size:.86rem}
+.treview{margin-top:8px}
+.tick{display:flex;align-items:center;gap:6px;font-size:.86rem;margin:6px 0}
+.btn.danger{background:#dc2626;border-color:#dc2626;color:#fff}
 .tsel{padding:10px 12px;border-radius:12px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit;margin-bottom:6px;max-width:100%}
 .tsub{margin:14px 0 6px;font-size:1rem}
 .mrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
@@ -264,7 +275,8 @@ function call(body){
   return sb.functions.invoke("profile", { body: body }).then(function(r){
     if (r.error) {
       var c = r.error.context;
-      if (c && c.json) return c.json().then(function(j){ throw new Error(j && j.error || "Something went wrong."); }, function(){ throw new Error("Couldn't reach the shop."); });
+      if (c && c.json) return c.json().then(function(j){ var e = new Error(j && j.error || "Something went wrong."); e.check = j && j.check; throw e; },
+        function(){ throw new Error("Couldn't reach the shop."); });
       throw new Error("Couldn't reach the shop.");
     }
     if (r.data && r.data.error) throw new Error(r.data.error);
@@ -843,36 +855,100 @@ function tabTrade(v){
       TR.people = x[0].people; TR.trades = x[1].trades; if (document.body.contains(host)) draw();
     }).catch(function(e){ host.textContent = ""; host.appendChild(h("p", "empty", e.message)); });
   }
-  function act(action, id){
-    call({ action:action, id:id }).then(function(st){
+  function act(action, id, sure){
+    call({ action:action, id:id, sure:!!sure }).then(function(st){
       if (st && st.look) { S = st; trial = clone(S.look); paintChips(); paintHero(); loadCounts(); }
       toast(action === "tradeAccept" ? "Trade done! 🤝" : action === "tradeDecline" ? "Offer turned down." : "Offer cancelled.");
-      load();
+      TR.open = null; load();
+    }).catch(function(e){ toast(e.message, true); TR.open = null; load(); });
+  }
+  /* How fair is it? A bar: your side against theirs, by rough value. */
+  function fairness(give, get){
+    var box = h("div", "fair"), tot = Math.max(1, give + get), pct = Math.round(100 * give / tot);
+    var bar = h("div", "fbar"), a = h("span", "fgive"), b = h("span", "fget");
+    a.style.width = pct + "%"; b.style.width = (100 - pct) + "%"; bar.appendChild(a); bar.appendChild(b);
+    box.appendChild(bar);
+    var lop = give > get * 2 + 40, win = get > give * 2 + 40;
+    box.appendChild(h("small", lop ? "fbad" : win ? "fgood" : "fok",
+      "You give about " + give + "p worth · you get about " + get + "p worth" + (lop ? " - that's lopsided against you" : win ? " - a good deal for you" : " - fair-ish")));
+    return box;
+  }
+  function warnBox(lines){
+    var w = h("div", "twarn"); w.appendChild(h("b", null, "⚠️ Stop and check"));
+    (lines || []).forEach(function(x){ w.appendChild(h("p", null, x)); });
+    return w;
+  }
+  function left(t){
+    var ms = new Date(t.expires).getTime() - Date.now();
+    if (!(ms > 0)) return "runs out soon";
+    var hrs = Math.floor(ms / 3600000);
+    return hrs >= 24 ? "runs out in " + Math.round(hrs / 24) + " day" + (Math.round(hrs / 24) === 1 ? "" : "s") : "runs out in " + Math.max(1, hrs) + " hour" + (hrs === 1 ? "" : "s");
+  }
+  /* Opening an offer starts a 5-second countdown before Accept works (the
+     server checks it too), so nobody accepts something by accident or
+     before they've read it. A lopsided or very rare trade also needs a tick. */
+  function review(r, t){
+    var box = h("div", "treview");
+    if (t.check && t.check.length) box.appendChild(warnBox(t.check));
+    var a = h("div", "acts");
+    var y = h("button", "btn", "Accept (5)"); y.type = "button"; y.disabled = true;
+    var n = h("button", "btn ghost", "No thanks"); n.type = "button"; n.onclick = function(){ act("tradeDecline", t.id); };
+    var tick = null;
+    if (t.check && t.check.length) {
+      var lab = h("label", "tick"); tick = h("input"); tick.type = "checkbox";
+      lab.appendChild(tick); lab.appendChild(h("span", null, " I've checked - I really want this trade"));
+      box.appendChild(lab);
+    }
+    a.appendChild(y); a.appendChild(n); box.appendChild(a); r.appendChild(box);
+    var count = 5, done = false;
+    function paint(){ y.disabled = count > 0 || (tick && !tick.checked); y.textContent = count > 0 ? "Accept (" + count + ")" : "Accept"; }
+    if (tick) tick.onchange = paint;
+    call({ action:"tradeView", id:t.id }).then(function(){
+      var iv = setInterval(function(){ count--; paint(); if (count <= 0 || !document.body.contains(y)) clearInterval(iv); }, 1000);
     }).catch(function(e){ toast(e.message, true); load(); });
+    y.onclick = function(){ if (done) return; done = true; y.disabled = true; act("tradeAccept", t.id, !!(tick && tick.checked)); };
   }
   function draw(){
     host.textContent = "";
     var open = TR.trades.filter(function(t){ return t.status === "open"; });
     var inc = open.filter(function(t){ return !t.mine; }), out = open.filter(function(t){ return t.mine; });
+    host.appendChild(h("div", "tsafe", "🛡️ Safe trading: nothing moves until both sides agree, offers can't be changed once sent, you get 5 seconds to look before Accept works, and offers run out after 3 days."));
     host.appendChild(h("h2", "sec", "📬 Offers for you (" + inc.length + ")"));
     if (!inc.length) host.appendChild(h("p", "note", "No offers right now."));
     inc.forEach(function(t){
       var r = h("div", "trow");
       r.appendChild(h("p", null, t.who + " gives you: " + sideText(t.give)));
       r.appendChild(h("p", null, "…and wants: " + sideText(t.want)));
-      var a = h("div", "acts");
-      var y = h("button", "btn", "Accept"); y.type = "button"; y.onclick = function(){ y.disabled = true; act("tradeAccept", t.id); };
-      var n = h("button", "btn ghost", "No thanks"); n.type = "button"; n.onclick = function(){ act("tradeDecline", t.id); };
-      a.appendChild(y); a.appendChild(n); r.appendChild(a); host.appendChild(r);
+      r.appendChild(fairness(t.youGive, t.youGet));
+      r.appendChild(h("small", "note", left(t)));
+      if (TR.open === t.id) review(r, t);
+      else {
+        var a = h("div", "acts");
+        var y = h("button", "btn", "Review"); y.type = "button"; y.onclick = function(){ TR.open = t.id; draw(); };
+        var n = h("button", "btn ghost", "No thanks"); n.type = "button"; n.onclick = function(){ act("tradeDecline", t.id); };
+        a.appendChild(y); a.appendChild(n); r.appendChild(a);
+      }
+      host.appendChild(r);
     });
     host.appendChild(h("h2", "sec", "📤 Your offers (" + out.length + ")"));
     if (!out.length) host.appendChild(h("p", "note", "You haven't offered anything."));
     out.forEach(function(t){
       var r = h("div", "trow");
       r.appendChild(h("p", null, "To " + t.who + ": you give " + sideText(t.give) + " for " + sideText(t.want)));
+      r.appendChild(fairness(t.youGive, t.youGet));
+      r.appendChild(h("small", "note", left(t)));
       var c = h("button", "btn ghost", "Cancel"); c.type = "button"; c.onclick = function(){ act("tradeCancel", t.id); };
-      r.appendChild(c); host.appendChild(r);
+      var a = h("div", "acts"); a.appendChild(c); r.appendChild(a); host.appendChild(r);
     });
+    var past = TR.trades.filter(function(t){ return t.status !== "open"; }).slice(0, 8);
+    if (past.length) {
+      host.appendChild(h("h2", "sec", "🧾 Recent trades"));
+      var WORD = { done:"✅ done", declined:"✖ turned down", cancelled:"✖ cancelled", failed:"⚠️ couldn't happen", expired:"⌛ ran out", undone:"↩️ undone by the founder" };
+      past.forEach(function(t){
+        host.appendChild(h("p", "note", (WORD[t.status] || t.status) + " · " + (t.mine ? "you → " + t.who + ": gave " + sideText(t.give) + ", got " + sideText(t.want)
+                                                                                    : t.who + " → you: got " + sideText(t.give) + ", gave " + sideText(t.want))));
+      });
+    }
     /* new offer */
     host.appendChild(h("h2", "sec", "✍️ Make an offer"));
     var sel = h("select", "tsel"); sel.setAttribute("aria-label", "Who to trade with");
@@ -890,14 +966,27 @@ function tabTrade(v){
     host.appendChild(TR.theirs ? pickGrid(TR.theirs, TR.want, "They don't have anything to trade yet.") : h("p", "note", "Looking at what they have…"));
     host.appendChild(moneyRow("wp", "wl", "And money from them:"));
     var send = h("button", "btn", "Send offer"); send.type = "button";
-    send.onclick = function(){
+    var a2 = h("div", "acts"); a2.appendChild(send); host.appendChild(a2);
+    var confirmHost = h("div"); host.appendChild(confirmHost);
+    function sendIt(sure){
       var give = { items:Object.keys(TR.give), pence:TR.gp, pounds:TR.gl }, want = { items:Object.keys(TR.want), pence:TR.wp, pounds:TR.wl };
       send.disabled = true;
-      call({ action:"tradeOffer", to:TR.to, give:give, want:want }).then(function(){
+      call({ action:"tradeOffer", to:TR.to, give:give, want:want, sure:!!sure }).then(function(){
         toast("Offer sent! They'll see it in their Trade tab."); TR.give = {}; TR.want = {}; TR.gp = TR.gl = TR.wp = TR.wl = 0; load();
-      }).catch(function(e){ send.disabled = false; toast(e.message, true); });
-    };
-    var a2 = h("div", "acts"); a2.appendChild(send); host.appendChild(a2);
+      }).catch(function(e){
+        send.disabled = false;
+        if (!e.check) { toast(e.message, true); return; }
+        /* lopsided or very rare: say why, and make them wait 3 seconds before "send anyway" */
+        confirmHost.textContent = ""; confirmHost.appendChild(warnBox(e.check));
+        var go = h("button", "btn danger", "Send anyway (3)"); go.type = "button"; go.disabled = true;
+        var no = h("button", "btn ghost", "Change it"); no.type = "button"; no.onclick = function(){ confirmHost.textContent = ""; };
+        var n = 3, iv = setInterval(function(){ n--; go.textContent = n > 0 ? "Send anyway (" + n + ")" : "Send anyway"; if (n <= 0) { go.disabled = false; clearInterval(iv); } }, 1000);
+        go.onclick = function(){ go.disabled = true; confirmHost.textContent = ""; sendIt(true); };
+        var a3 = h("div", "acts"); a3.appendChild(go); a3.appendChild(no); confirmHost.appendChild(a3);
+        confirmHost.scrollIntoView({ block:"nearest", behavior:"smooth" });
+      });
+    }
+    send.onclick = function(){ confirmHost.textContent = ""; sendIt(false); };
   }
   function pickGrid(ids, chosen, empty){
     if (!ids.length) return h("p", "note", empty);
