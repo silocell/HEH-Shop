@@ -234,7 +234,7 @@ footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 3
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
 <script src="https://civilinitiatives.org/auth-store.js?b=20261026a"></script>
-<script src="https://civilinitiatives.org/avatar.js?b=20261028i"></script>
+<script src="https://civilinitiatives.org/avatar.js?b=20261028j"></script>
 </head>
 <body>
 <header class="top">
@@ -1140,7 +1140,7 @@ function tabSimple(part, title, lead){
 }
 function tabLimited(v){
   v.appendChild(h("h2", "sec", "Limited"));
-  v.appendChild(h("p", "lead", "Only so many copies will ever exist - 5 at most, some just 3, 2 or 1. They're only sold in the weekly shop, and you can buy one limited item a week, so everyone gets a chance. Otherwise: trade for them, or look in the Market."));
+  v.appendChild(h("p", "lead", "Only so many copies will ever exist - 5 at most, some just 3, 2 or 1. They're only sold in the weekly shop, and you can buy one limited item a week, so everyone gets a chance. The vault holds over 1,000 more with just 1, 2 or 3 copies each - two of them come out each week, and each one only once in a long while. Missed one? Trade for it, or look in the Market."));
   v.appendChild(grid(C.items.filter(function(i){ return i.stock; })));
 }
 function tabEarned(v){
@@ -1180,14 +1180,14 @@ function tabCredits(v){
   v.appendChild(ul);
 }
 
-var BASE_STOCK = null;
+var BASE_STOCK = null, ALLITEMS = [];
 function loadCounts(){
   return call({ action:"stats" }).then(function(c){
     COUNTS = c;
     /* the founder can change how many copies may exist */
-    if (!BASE_STOCK) { BASE_STOCK = {}; C.items.forEach(function(i){ if (i.stock) BASE_STOCK[i.id] = i.stock; }); }
+    if (!BASE_STOCK) { BASE_STOCK = {}; ALLITEMS.forEach(function(i){ if (i.stock) BASE_STOCK[i.id] = i.stock; }); }
     var caps = (c && c.caps) || {};
-    C.items.forEach(function(i){ if (BASE_STOCK[i.id] || caps[i.id]) i.stock = caps[i.id] || BASE_STOCK[i.id]; });
+    ALLITEMS.forEach(function(i){ if (BASE_STOCK[i.id] || caps[i.id]) i.stock = caps[i.id] || BASE_STOCK[i.id]; });
     if (S) { render(); paintHero(); }
   }, function(){});
 }
@@ -1207,7 +1207,11 @@ sb.auth.getSession().then(function(r){
   var md = s.user.user_metadata || {};
   me = { name: md.full_name || md.name || (s.user.email || "").split("@")[0], email: s.user.email || "" };
   return Promise.all([HEHAvatar.ready, call({ action:"get" })]).then(function(x){
-    C = x[0]; C.items.forEach(function(i){ BY[i.id] = i; });
+    /* The vault (1000+ items with 1-3 copies) stays out of sight except
+       the two in this week's shop and any you own. */
+    ALLITEMS = x[0].items; ALLITEMS.forEach(function(i){ BY[i.id] = i; });
+    C = Object.assign({}, x[0]);
+    Object.defineProperty(C, "items", { get: function(){ return ALLITEMS.filter(function(i){ return !i.vault || !S || has(i) || featured(i); }); } });
     S = x[1]; trial = clone(S.look); HEHAvatar.applyTheme(trial);
     var m = document.getElementById("main"); m.textContent = "";
     var hero = h("section", "hero"); hero.id = "hero"; m.appendChild(hero);
