@@ -615,6 +615,7 @@ function render(){
   var v = document.getElementById("view"); v.textContent = ""; listHost = listFn = null;
   var t = document.getElementById("tabs"); t.textContent = "";
   TABS.forEach(function(x){
+    if (x[0] === "stocks" && !STK.ok) return;   /* only once the server has the market */
     var b = h("button", "tab", x[1]); b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", view.tab === x[0] ? "true" : "false");
     b.onclick = function(){ view.tab = x[0]; view.opt = null; location.hash = x[0]; render(); };
     t.appendChild(b);
@@ -1438,6 +1439,7 @@ sb.auth.getSession().then(function(r){
     var v = h("section"); v.id = "view"; m.appendChild(v);
     var want = location.hash.slice(1); if (TABS.some(function(t){ return t[0] === want; })) view.tab = want;
     paintChips(); paintHero(); render(); loadCounts();
+    call({ action:"stocks" }).then(function(d){ STK.data = d; STK.ok = true; render(); }, function(){});
   });
 }).catch(function(e){ gate((e && e.message) || "The shop couldn't open. Try again in a minute."); });
 document.getElementById("creditsLink").onclick = function(e){ if (S) { e.preventDefault(); view.tab = "credits"; render(); window.scrollTo(0, 0); } };
