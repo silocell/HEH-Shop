@@ -404,7 +404,7 @@ function howTo(it){
   if (it.stock === 1) bits.push("One of a kind: only one will ever exist - whoever gets it is the only person in the world with it.");
   else if (it.stock) bits.push("Only " + it.stock + " will ever exist.");
   else if (it.only === "helper") bits.push("Helpers only: every helper has this for as long as they're a helper.");
-  else if (it.gift === "honour") bits.push("🏅 An honour: the founder gives this to people who've earned it. It can't be bought or traded." + (it.says ? " " + it.says : ""));
+  else if (it.gift === "honour") bits.push("🏅 An honour: the founder gives this to people who've earned it. It can't be bought in the shop" + (it.id === "gh-photo" ? " or traded." : " - but whoever has one can trade it or sell it on the Market, so honours are worth a lot.") + (it.says ? " " + it.says : ""));
   else if (it.gift) bits.push("A thank-you for the people who helped test the Launchpad. It can't be bought or traded - only the founder gives it.");
   else if (it.ach) bits.push("Can't be bought - earned with the " + achName(it.ach) + " achievement.");
   else if (it.days) bits.push(dayOk(it) ? "Today only! Free to claim - but only today (" + it.when + ")." : "Can only be claimed on " + it.when + ". Miss it and you'll have to wait.");
@@ -778,6 +778,7 @@ function label(key){
   if (key === "start") return "🎉 Welcome bonus";
   if (key === "levelup") return "🚀 Level Up";
   if (key === "gift" || /^gift:/.test(key)) return "🎁 Gift from the founder";
+  if (key === "take" || /^take:/.test(key)) return "↩️ Taken back by the founder";
   if ((m = /^day:[^:]+:(.+)$/.exec(key))) return "🏁 Milestone: " + m[1];
   if (/^luck:/.test(key)) return "🍀 Lucky Pound!";
   if ((m = /^ach:(.+)$/.exec(key))) return "🏅 Achievement: " + achName(m[1]);
@@ -890,7 +891,7 @@ function labelledSave(list){
 
 /* ---------- trading ---------- */
 var TR = { people:null, trades:null, to:"", theirs:null, give:{}, want:{}, gp:0, gl:0, wp:0, wl:0 };
-function tradeable(it){ return it && !it.only && !it.ach && !it.days && !it.gift && !isFree(it); }
+function tradeable(it){ return it && !it.only && !it.ach && !it.days && (!it.gift || (it.gift === "honour" && it.id !== "gh-photo")) && !isFree(it); }
 function sideText(x){
   var b = (x.items || []).map(function(id){ return BY[id] ? BY[id].name : id; });
   if (x.pence) b.push(x.pence + "p"); if (x.pounds) b.push("🪙 " + x.pounds);
@@ -1177,7 +1178,7 @@ function tabEarned(v){
   v.appendChild(h("p", "lead", "A thank-you for the people who had the patience to test the Launchpad. Never sold, never traded - the founder gives them."));
   v.appendChild(grid(C.items.filter(function(i){ return i.gift === "tester"; })));
   v.appendChild(h("h2", "sec", "🏅 Honours"));
-  v.appendChild(h("p", "lead", "Given by the founder to people who've earned it - never sold, never traded. Own photo lets you use your own picture (it's checked first)."));
+  v.appendChild(h("p", "lead", "Given by the founder to people who've earned it - never in the shop. Once you have one you can trade it or sell it on the Market, so they're worth a lot. (Own photo stays with you: it lets you use your own picture, checked first.)"));
   v.appendChild(grid(C.items.filter(function(i){ return i.gift === "honour"; })));
   v.appendChild(h("h2", "sec", "Helpers only"));
   v.appendChild(h("p", "lead", "Every helper has these for as long as they're a helper. Nobody else can get them."));
