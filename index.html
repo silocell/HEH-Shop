@@ -235,6 +235,38 @@ footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 3
   .chip.pts-l{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .card{transition:none} .card:hover{transform:none} .rar.mythic,.rar.unique,.rar.exotic,.rar.relic{animation:none} }
+/* ---------- stock market ---------- */
+.stkport{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:6px 0 10px}
+.stkport div{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:10px 12px}
+.stkport small{display:block;color:var(--soft);font-size:.75rem;font-weight:700}
+.stkport b{font-size:1.15rem;font-variant-numeric:tabular-nums}
+.up{color:var(--good)} .down{color:var(--bad)}
+.stkclock{color:var(--soft);font-size:.82rem;margin:0 0 10px}
+.stklist{display:flex;flex-direction:column;gap:8px}
+.stkrow{display:grid;grid-template-columns:44px minmax(0,1fr) 110px auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--rule);
+  border-radius:14px;padding:10px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.stkrow:hover{box-shadow:0 8px 20px -14px rgba(0,0,0,.45)}
+.stkrow.on{outline:3px solid var(--accent);outline-offset:-1px}
+.stkemo{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.5rem;background:var(--accent-soft)}
+.stknm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stknm small{color:var(--soft);font-size:.75rem}
+.stkpx{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stkpx b{display:block}
+.stkpx small{font-weight:700;font-size:.78rem}
+.spark{width:110px;height:34px;display:block}
+.stkdet{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:14px;margin:10px 0}
+.stkdet h3{margin:0;font-family:var(--display);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stkbig{width:100%;height:180px;display:block;margin:8px 0 4px}
+.stkaxis{display:flex;justify-content:space-between;color:var(--soft);font-size:.72rem}
+.stkbuy{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.stkbuy input{width:90px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:10px;padding:9px 10px;font:inherit}
+.stkq{border:1px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer;font-size:.8rem}
+.stknews{list-style:none;padding:0;margin:6px 0;display:flex;flex-direction:column;gap:6px}
+.stknews li{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:8px 10px;font-size:.88rem}
+.stknews small{color:var(--soft)}
+.stktips{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:6px}
+.stktips div{background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:.85rem}
+@media (max-width:560px){.stkrow{grid-template-columns:40px minmax(0,1fr) auto}.stkrow .spark{display:none}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
 <script src="https://civilinitiatives.org/auth-store.js?b=20261026a"></script>
@@ -575,7 +607,7 @@ function filtersBar(){
 }
 
 /* ---------- the tabs ---------- */
-var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["wallet","💳 Wallet"],["cards","🎴 Card designs"],["trade","🤝 Trade"],["market","🏪 Market"],["character","🧑 Character"],["art","🎨 Art"],["tags","🏷️ Tags"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
+var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["wallet","💳 Wallet"],["cards","🎴 Card designs"],["trade","🤝 Trade"],["market","🏪 Market"],["stocks","📈 Stocks"],["character","🧑 Character"],["art","🎨 Art"],["tags","🏷️ Tags"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
             ["limited","⏳ Limited"],["earned","🏅 Earned & special"],["achievements","🏆 Achievements"],["credits","Credits"]];
 var listHost = null, listFn = null;
 function renderList(){ if (listHost && listFn) { listHost.textContent = ""; listHost.appendChild(listFn()); markOn(); } }
@@ -587,7 +619,7 @@ function render(){
     b.onclick = function(){ view.tab = x[0]; view.opt = null; location.hash = x[0]; render(); };
     t.appendChild(b);
   });
-  ({ week:tabWeek, owned:tabOwned, wallet:tabWallet, cards:tabSimple("card","Debit card designs","How your Launchpad debit card looks in your wallet."), trade:tabTrade, market:tabMarket, tags:tabTags, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
+  ({ week:tabWeek, owned:tabOwned, wallet:tabWallet, cards:tabSimple("card","Debit card designs","How your Launchpad debit card looks in your wallet."), trade:tabTrade, market:tabMarket, stocks:tabStocks, tags:tabTags, character:tabCharacter, art:tabArt, name:tabSimple("name","Name colours","The colour of your name on your profile, the top bar and the shop."),
      theme:tabSimple("theme","Dashboard themes","Changes the colours and the background of your dashboard. Tap one to see it right here."),
      limited:tabLimited, earned:tabEarned, achievements:tabAch, credits:tabCredits })[view.tab](v);
   markOn();
@@ -779,6 +811,7 @@ function label(key){
   if (key === "levelup") return "🚀 Level Up";
   if (key === "gift" || /^gift:/.test(key)) return "🎁 Gift from the founder";
   if (key === "take" || /^take:/.test(key)) return "↩️ Taken back by the founder";
+  if ((m = /^stock:(.+)$/.exec(key))) return "📈 Shares: " + ({ MUNCH:"Munch Mart", ROCKT:"Rocket Noodles", WAVE:"Wavecast Games", GLOW:"Glowworm Energy", SKYF:"Skyfarm", PUPR:"Pupper Robotics", DRGN:"Dragon Air", BRIK:"Brickle Toys" }[m[1]] || m[1]);
   if ((m = /^day:[^:]+:(.+)$/.exec(key))) return "🏁 Milestone: " + m[1];
   if (/^luck:/.test(key)) return "🍀 Lucky Pound!";
   if ((m = /^ach:(.+)$/.exec(key))) return "🏅 Achievement: " + achName(m[1]);
@@ -1201,6 +1234,162 @@ function tabAch(v){
     v.appendChild(row);
   });
 }
+/* ---------- the Stock Market: shares in made-up companies ----------
+   Prices are worked out on the server every 15 minutes; nobody (not even
+   this page) can see what they'll be next. */
+var STK = { data:null, sel:null, range:"day", qty:1, armed:null, clock:null };
+function pct(a, b){ return b ? Math.round(1000 * (a - b) / b) / 10 : 0; }
+function signed(n, unit){ return (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toLocaleString() + (unit || ""); }
+function chartSvg(arr, cls, big){
+  var w = big ? 600 : 110, ht = big ? 180 : 34, mn = Math.min.apply(null, arr), mx = Math.max.apply(null, arr), sp = Math.max(1, mx - mn);
+  var pts = arr.map(function(v, i){ return (i * w / Math.max(1, arr.length - 1)).toFixed(1) + "," + (ht - 3 - (v - mn) * (ht - 6) / sp).toFixed(1); });
+  var col = arr[arr.length - 1] >= arr[0] ? "var(--good)" : "var(--bad)";
+  var ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 " + w + " " + ht); svg.setAttribute("preserveAspectRatio", "none"); svg.setAttribute("class", cls);
+  svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "Price went from " + arr[0] + "p to " + arr[arr.length - 1] + "p");
+  if (big) { var ar = document.createElementNS(ns, "polygon"); ar.setAttribute("points", "0," + ht + " " + pts.join(" ") + " " + w + "," + ht); ar.setAttribute("fill", col); ar.setAttribute("opacity", ".12"); svg.appendChild(ar); }
+  var pl = document.createElementNS(ns, "polyline"); pl.setAttribute("points", pts.join(" ")); pl.setAttribute("fill", "none"); pl.setAttribute("stroke", col);
+  pl.setAttribute("stroke-width", big ? "2.5" : "2"); pl.setAttribute("vector-effect", "non-scaling-stroke"); pl.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(pl);
+  return svg;
+}
+function tabStocks(v){
+  v.appendChild(h("h2", "sec", "📈 Stock Market"));
+  v.appendChild(h("p", "lead", "Buy shares in made-up companies with your pence. If the company does well, its share price goes up and you can sell for more than you paid - but prices can go down too. Prices change every 15 minutes."));
+  var host = h("div"); v.appendChild(host);
+  function load(){
+    call({ action:"stocks" }).then(function(d){ STK.data = d; if (typeof d.pts === "number") { S.pts = d.pts; paintChips(); } if (document.body.contains(host)) draw(); })
+      .catch(function(e){ host.textContent = ""; host.appendChild(h("p", "empty", e.message)); });
+  }
+  function held(sym){ var r = (STK.data.holdings || []).filter(function(x){ return x.sym === sym; })[0]; return r || { shares:0, spent:0 }; }
+  function draw(){
+    var d = STK.data; host.textContent = "";
+    var worth = 0, spent = 0;
+    d.companies.forEach(function(c){ var hd = held(c.sym); worth += hd.shares * c.price; spent += Number(hd.spent); });
+    var port = h("div", "stkport");
+    [["Your pence", S.pts.toLocaleString() + "p", ""], ["Your shares are worth", worth.toLocaleString() + "p", ""],
+     ["Profit / loss", signed(worth - spent, "p"), worth - spent > 0 ? "up" : worth - spent < 0 ? "down" : ""], ["Everything together", (S.pts + worth).toLocaleString() + "p", ""]]
+      .forEach(function(x){ var b = h("div"); b.appendChild(h("small", null, x[0])); b.appendChild(h("b", x[2], x[1])); port.appendChild(b); });
+    host.appendChild(port);
+    var clk = h("p", "stkclock"); host.appendChild(clk);
+    clearInterval(STK.clock);
+    function tickClock(){
+      if (!document.body.contains(clk)) { clearInterval(STK.clock); return; }
+      var ms = new Date(d.next) - Date.now();
+      if (ms <= 0) { clearInterval(STK.clock); clk.textContent = "Prices are changing…"; setTimeout(load, 2500); return; }
+      clk.textContent = "⏱️ New prices in " + Math.floor(ms / 60000) + ":" + String(Math.floor(ms / 1000) % 60).padStart(2, "0");
+    }
+    tickClock(); STK.clock = setInterval(tickClock, 1000);
+
+    var list = h("div", "stklist");
+    d.companies.forEach(function(c){
+      var row = h("button", "stkrow" + (STK.sel === c.sym ? " on" : "")); row.type = "button";
+      row.appendChild(h("span", "stkemo", c.emoji));
+      var nm = h("span", "stknm"); nm.appendChild(h("b", null, c.name)); var hd = held(c.sym);
+      nm.appendChild(h("small", null, c.sym + " · " + c.sector + (hd.shares ? " · you have " + hd.shares.toLocaleString() : "")));
+      row.appendChild(nm); row.appendChild(chartSvg(c.day, "spark"));
+      var px = h("span", "stkpx"), ch = pct(c.price, c.dayAgo);
+      px.appendChild(h("b", null, c.price.toLocaleString() + "p")); px.appendChild(h("small", ch > 0 ? "up" : ch < 0 ? "down" : "", (ch > 0 ? "▲ " : ch < 0 ? "▼ " : "") + Math.abs(ch) + "% today"));
+      row.appendChild(px);
+      row.setAttribute("aria-label", c.name + ", " + c.price + " pence, " + (ch >= 0 ? "up " : "down ") + Math.abs(ch) + " percent today");
+      row.onclick = function(){ STK.sel = STK.sel === c.sym ? null : c.sym; STK.armed = null; STK.qty = 1; draw(); };
+      list.appendChild(row);
+      if (STK.sel === c.sym) list.appendChild(detail(c));
+    });
+    host.appendChild(list);
+
+    host.appendChild(h("h2", "sec", "📰 Market news"));
+    if (!d.news.length) host.appendChild(h("p", "note", "No news yet."));
+    else { var ul = h("ul", "stknews"); d.news.slice(0, 8).forEach(function(n){ ul.appendChild(newsLi(n)); }); host.appendChild(ul); }
+
+    if ((d.trades || []).length) {
+      host.appendChild(h("h2", "sec", "🧾 Your trades"));
+      var tl = h("ul", "stknews");
+      d.trades.slice(0, 8).forEach(function(t){
+        var c = d.companies.filter(function(x){ return x.sym === t.sym; })[0];
+        tl.appendChild(h("li", null, (t.shares > 0 ? "Bought " : "Sold ") + Math.abs(t.shares) + " " + (c ? c.name : t.sym) + " at " + t.price + "p = " + (Math.abs(t.shares) * t.price).toLocaleString() + "p · " + new Date(t.at).toLocaleString([], { weekday:"short", hour:"2-digit", minute:"2-digit" })));
+      });
+      host.appendChild(tl);
+    }
+    host.appendChild(h("h2", "sec", "💡 How investing works"));
+    var tips = h("div", "stktips");
+    [["Buy low, sell high", "You make money if you sell for more than you paid. But nobody knows for sure which way a price will go next."],
+     ["Don't put all your eggs in one basket", "Owning a few different companies means one bad day doesn't wipe you out. That's called diversifying."],
+     ["News moves prices", "Good news usually pushes a price up and bad news pushes it down. Keep an eye on the news below."],
+     ["Steady or wild?", "Some shares (like Munch Mart) barely move; others (like Dragon Air) jump around. Wild ones can win big or lose big."],
+     ["Patience pays", "Prices wobble every few minutes. Over weeks, good companies tend to grow - panicking and selling on a bad day often loses."]]
+      .forEach(function(t){ var b = h("div"); b.appendChild(h("b", null, t[0])); b.appendChild(h("p", "note", t[1])); tips.appendChild(b); });
+    host.appendChild(tips);
+  }
+  function newsLi(n){
+    var c = STK.data.companies.filter(function(x){ return x.sym === n.sym; })[0];
+    var li = h("li"); li.appendChild(h("span", n.good ? "up" : "down", (n.good ? "▲ " : "▼ ") + (c ? c.emoji + " " : "")));
+    li.appendChild(document.createTextNode(n.text + " "));
+    li.appendChild(h("small", null, "(" + signed(n.move, "%") + ") · " + new Date(n.at).toLocaleString([], { weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" })));
+    return li;
+  }
+  function detail(c){
+    var box = h("div", "stkdet"), hd = held(c.sym);
+    var t = h("h3"); t.appendChild(h("span", null, c.emoji + " " + c.name)); t.appendChild(h("small", "note", c.sym + " · " + c.sector)); box.appendChild(t);
+    box.appendChild(h("p", "note", c.about));
+    var rg = h("div", "sub");
+    [["day","Day"],["week","Week"],["month","Month"]].forEach(function(r){
+      var b = h("button", "tab", r[1]); b.type = "button"; b.setAttribute("aria-selected", STK.range === r[0] ? "true" : "false");
+      b.onclick = function(){ STK.range = r[0]; draw(); }; rg.appendChild(b);
+    });
+    box.appendChild(rg);
+    var arr = c[STK.range]; box.appendChild(chartSvg(arr, "stkbig", true));
+    var ax = h("div", "stkaxis"); ax.appendChild(h("span", null, { day:"24 hours ago", week:"7 days ago", month:"30 days ago" }[STK.range]));
+    ax.appendChild(h("span", null, "low " + Math.min.apply(null, arr) + "p · high " + Math.max.apply(null, arr) + "p")); ax.appendChild(h("span", null, "now")); box.appendChild(ax);
+    if (hd.shares) {
+      var val = hd.shares * c.price, pl = val - Number(hd.spent);
+      var own = h("p", "note"); own.appendChild(document.createTextNode("You have " + hd.shares.toLocaleString() + " share" + (hd.shares === 1 ? "" : "s") + ", worth " + val.toLocaleString() + "p (you paid " + Number(hd.spent).toLocaleString() + "p) - "));
+      own.appendChild(h("b", pl > 0 ? "up" : pl < 0 ? "down" : "", pl === 0 ? "even" : signed(pl, "p") + (pl > 0 ? " profit" : " loss"))); box.appendChild(own);
+    }
+    var bx = h("div", "stkbuy");
+    var q = h("input"); q.type = "number"; q.min = "1"; q.step = "1"; q.value = String(STK.qty); q.setAttribute("aria-label", "How many shares");
+    var cost = h("span", "note");
+    function setQ(n){ STK.qty = Math.max(1, Math.min(100000, Math.floor(n) || 1)); q.value = String(STK.qty); STK.armed = null; paint(); }
+    q.oninput = function(){ STK.qty = Math.max(1, Math.min(100000, Math.floor(Number(q.value)) || 1)); STK.armed = null; paint(); };
+    bx.appendChild(q);
+    [1, 10, 100].forEach(function(n){ var b = h("button", "stkq", "×" + n); b.type = "button"; b.onclick = function(){ setQ(n); }; bx.appendChild(b); });
+    var mx = h("button", "stkq", "Max I can buy"); mx.type = "button"; mx.onclick = function(){ setQ(Math.floor(S.pts / c.price)); }; bx.appendChild(mx);
+    if (hd.shares) { var all = h("button", "stkq", "All mine"); all.type = "button"; all.onclick = function(){ setQ(hd.shares); }; bx.appendChild(all); }
+    box.appendChild(bx);
+    var acts = h("div", "acts"); acts.style.marginTop = "10px";
+    var buy = h("button", "btn"); buy.type = "button";
+    var sell = h("button", "btn ghost"); sell.type = "button";
+    acts.appendChild(buy); acts.appendChild(sell); box.appendChild(acts); box.appendChild(cost);
+    function paint(){
+      var tot = STK.qty * c.price;
+      buy.textContent = STK.armed === "buy" ? "Sure? Buy for " + tot.toLocaleString() + "p" : "Buy " + STK.qty.toLocaleString();
+      sell.textContent = STK.armed === "sell" ? "Sure? Sell for " + tot.toLocaleString() + "p" : "Sell " + STK.qty.toLocaleString();
+      buy.className = "btn" + (STK.armed === "buy" ? " armed" : ""); sell.className = "btn ghost" + (STK.armed === "sell" ? " armed" : "");
+      buy.disabled = tot > S.pts; sell.disabled = STK.qty > hd.shares;
+      cost.textContent = STK.qty.toLocaleString() + " × " + c.price + "p = " + tot.toLocaleString() + "p" + (tot > S.pts ? " - you have " + S.pts.toLocaleString() + "p" : "");
+    }
+    function go(side){
+      var tot = STK.qty * c.price;
+      /* a big buy (over half your pence) or selling at a loss asks twice */
+      var big = side === "buy" ? tot > S.pts / 2 : hd.shares && Number(hd.spent) / hd.shares > c.price;
+      if (big && STK.armed !== side) { STK.armed = side; paint(); return; }
+      buy.disabled = sell.disabled = true;
+      call({ action:"stockTrade", sym:c.sym, shares: side === "buy" ? STK.qty : -STK.qty }).then(function(d){
+        STK.data = d; STK.armed = null; S.pts = d.pts; paintChips();
+        toast((side === "buy" ? "Bought " : "Sold ") + STK.qty + " " + c.name + " share" + (STK.qty === 1 ? "" : "s") + " at " + d.price + "p.");
+        draw();
+      }).catch(function(e){ toast(e.message, true); STK.armed = null; load(); });
+    }
+    buy.onclick = function(){ go("buy"); }; sell.onclick = function(){ go("sell"); };
+    paint();
+    var cn = STK.data.news.filter(function(n){ return n.sym === c.sym; });
+    if (cn.length) { box.appendChild(h("p", "note", "News about " + c.name + ":")); var ul = h("ul", "stknews"); cn.slice(0, 4).forEach(function(n){ ul.appendChild(newsLi(n)); }); box.appendChild(ul); }
+    return box;
+  }
+  if (STK.data) draw(); else host.appendChild(h("p", "note", "Opening the market…"));
+  load();
+}
+
 function tabCredits(v){
   v.appendChild(h("h2", "sec", "Art credits"));
   v.appendChild(h("p", "lead", "The characters and emoji art are free artwork shared by their makers. Thank you!"));
