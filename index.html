@@ -265,6 +265,26 @@ footer{color:var(--faint);font-size:.78rem;text-align:center;padding:10px 16px 3
 .stkbuy{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .stkbuy input{width:90px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:10px;padding:9px 10px;font:inherit}
 .stkq{border:1px solid var(--rule);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer;font-size:.8rem}
+.saverow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px}
+.saverow input{width:120px;padding:11px 12px;border-radius:12px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font:inherit}
+.saverow .btn{margin:0}
+.rich{list-style:none;padding:0;margin:6px 0;display:flex;flex-direction:column;gap:6px;max-width:520px}
+.rich li{display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:14px;background:var(--card);border:1px solid var(--rule)}
+.rich li.me{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.rich .rk{width:28px;text-align:center;font-weight:800}
+.rich .rn{flex:1;font-weight:700}
+.rich b{font-variant-numeric:tabular-nums}
+.advent{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin:8px 0 14px;max-width:720px}
+.door{position:relative;aspect-ratio:1;border-radius:14px;border:2px solid #b91c1c;background:linear-gradient(145deg,#dc2626,#7f1d1d);color:#fff;font:800 1.3rem system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:default;padding:0}
+.door:nth-child(3n+2){background:linear-gradient(145deg,#16a34a,#14532d);border-color:#15803d}
+.door:nth-child(4n+3){background:linear-gradient(145deg,#2563eb,#1e3a8a);border-color:#1d4ed8}
+.door small{font-size:.68rem;font-weight:700;opacity:.9}
+.door.big{grid-column:span 2;aspect-ratio:auto;background:linear-gradient(145deg,#f59e0b,#b45309);border-color:#d97706}
+.door.today{cursor:pointer;box-shadow:0 0 0 3px #fde68a,0 8px 22px -6px #f59e0b;animation:door-wiggle 1.6s ease-in-out infinite}
+.door.open{background:var(--card);color:var(--ink);border:2px dashed var(--rule)}
+.door.missed{opacity:.4}
+@keyframes door-wiggle{0%,100%{transform:rotate(0)}10%{transform:rotate(-3deg)}20%{transform:rotate(3deg)}30%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.door.today{animation:none}}
 .stknews{list-style:none;padding:0;margin:6px 0;display:flex;flex-direction:column;gap:6px}
 .stknews li{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:8px 10px;font-size:.88rem}
 .stknews small{color:var(--soft)}
@@ -852,6 +872,9 @@ function label(key){
   if (/^market:/.test(key)) return "🏪 Market";
   if (/^undo:/.test(key)) return "↩️ Trade undone by the founder";
   if (/^time:/.test(key)) return "🎮 30 more minutes of Rocket Rush";
+  if (key === "save") return "🏦 Savings account";
+  if ((m = /^div:(.+)$/.exec(key))) return "💷 Dividend: " + ({ MUNCH:"Munch Mart", ROCKT:"Rocket Noodles", GLOW:"Glowworm Energy", DRGN:"Dragon Air", BRIK:"Brickle Toys" }[m[1]] || m[1]);
+  if ((m = /^advent:(\d+)$/.exec(key))) return "🎄 Advent calendar, door " + m[1];
   if ((m = /^learn:(.+)$/.exec(key))) return "📚 Right answers: " + m[1];
   if ((m = /^play:(.+)$/.exec(key))) return "🎮 Played: " + m[1];
   return key;
@@ -884,6 +907,7 @@ function tabWallet(v){
   side.appendChild(chg);
   row.appendChild(side);
   v.appendChild(row);
+  walletBank(v);
   /* saving up */
   v.appendChild(h("h2", "sec", "🎯 Saving up"));
   var gid = goalGet(), goal = BY[gid];
@@ -943,6 +967,103 @@ function tabWallet(v){
   }
   draw();
   call({ action:"statement" }).then(function(d){ STMT = d; if (document.body.contains(host)) draw(); }, function(){});
+}
+/* ---------- the bank: savings account, the rich list, the advent calendar ---------- */
+var BANK = { sav:null, rich:null, adv:null, busy:false };
+function walletBank(v){
+  /* advent calendar (December, or a countdown to it) */
+  var advHost = h("div"); v.appendChild(advHost);
+  function drawAdvent(){
+    advHost.textContent = "";
+    var a = BANK.adv; if (!a) return;
+    if (!a.open && a.today !== 25) {
+      var now = new Date(), dec1 = new Date(now.getFullYear(), 11, 1), days = Math.ceil((dec1 - now) / 86400000);
+      if (days > 0 && days <= 40) { var cd = h("div", "tip"); cd.appendChild(h("b", null, "🎄 Advent calendar")); cd.appendChild(h("p", null, "Opens on 1 December - " + days + " day" + (days === 1 ? "" : "s") + " to go. A door a day, with pence behind every one.")); advHost.appendChild(cd); }
+      return;
+    }
+    advHost.appendChild(h("h2", "sec", "🎄 Advent calendar"));
+    advHost.appendChild(h("p", "lead", a.open ? "Open a door every day until Christmas Eve. Miss a day and that door stays shut, so come back tomorrow!" : "That's all 24 doors for this year. Happy Christmas! 🎅"));
+    var g = h("div", "advent"), got = {};
+    (a.opened || []).forEach(function(o){ got[o.day] = o.amount; });
+    for (var d = 1; d <= 24; d++) (function(d){
+      var b = h("button", "door" + (got[d] ? " open" : "") + (d === a.today && a.open && !got[d] ? " today" : "") + (d < a.today && !got[d] ? " missed" : "") + (d === 24 ? " big" : ""));
+      b.type = "button";
+      b.appendChild(h("span", "dn", String(d)));
+      if (got[d]) b.appendChild(h("small", null, "+" + got[d] + "p"));
+      else if (d < a.today) b.appendChild(h("small", null, "missed"));
+      b.disabled = !(d === a.today && a.open && !got[d]) || BANK.busy;
+      b.setAttribute("aria-label", "Door " + d + (got[d] ? ", opened, " + got[d] + " pence" : d === a.today ? ", today - open it" : ""));
+      b.onclick = function(){
+        BANK.busy = true; drawAdvent();
+        call({ action:"adventOpen" }).then(function(r){
+          BANK.busy = false; a.opened.push({ day:r.day, amount:r.amount }); S.pts += r.amount; paintChips(); drawAdvent();
+          toast("🎄 Door " + r.day + ": +" + r.amount + "p!");
+        }, function(e){ BANK.busy = false; drawAdvent(); toast(e.message); });
+      };
+      g.appendChild(b);
+    })(d);
+    advHost.appendChild(g);
+  }
+  call({ action:"advent" }).then(function(d){ BANK.adv = d; if (document.body.contains(advHost)) drawAdvent(); }, function(){});
+
+  /* savings account */
+  v.appendChild(h("h2", "sec", "🏦 Savings account"));
+  v.appendChild(h("p", "lead", "Pence you put in here earn 1% interest every week (paid each Monday, up to 100p a week). Interest is paid on the least you had saved all week - so leave it in to earn."));
+  var sh = h("div"); v.appendChild(sh);
+  function drawSav(){
+    sh.textContent = "";
+    var sv = BANK.sav;
+    if (!sv) { sh.appendChild(h("p", "empty", "Opening your account…")); return; }
+    var port = h("div", "stkport");
+    [["Saved", sv.bal.toLocaleString() + "p"], ["To spend", S.pts.toLocaleString() + "p"], ["Next Monday's interest", "+" + sv.next + "p"]]
+      .forEach(function(x){ var b = h("div"); b.appendChild(h("small", null, x[0])); b.appendChild(h("b", null, x[1])); port.appendChild(b); });
+    sh.appendChild(port);
+    var row = h("div", "saverow");
+    var inp = h("input"); inp.type = "number"; inp.min = "1"; inp.step = "1"; inp.placeholder = "Pence"; inp.setAttribute("aria-label", "How many pence");
+    var put = h("button", "btn", "Put in"); put.type = "button";
+    var take = h("button", "btn ghost", "Take out"); take.type = "button";
+    function go(sign){
+      var n = Math.floor(Number(inp.value));
+      if (!(n > 0)) { inp.focus(); return; }
+      put.disabled = take.disabled = true;
+      call({ action:"saveMove", amount: sign * n }).then(function(d){
+        BANK.sav = d; S.pts = d.pts; paintChips(); drawSav(); toast(sign > 0 ? "🏦 Saved " + n + "p" : "🏦 Took out " + n + "p");
+      }, function(e){ put.disabled = take.disabled = false; toast(e.message); });
+    }
+    put.onclick = function(){ go(1); }; take.onclick = function(){ go(-1); };
+    row.appendChild(inp); row.appendChild(put); row.appendChild(take);
+    sh.appendChild(row);
+    if ((sv.log || []).length) {
+      var ul = h("ul", "stknews");
+      sv.log.slice(0, 6).forEach(function(l){
+        ul.appendChild(h("li", null, (l.kind === "in" ? "Put in " : l.kind === "out" ? "Took out " : "✨ Interest ") + (l.kind === "out" ? "−" : "+") + l.amount + "p · " + new Date(l.at).toLocaleDateString([], { weekday:"short", day:"numeric", month:"short" })));
+      });
+      sh.appendChild(ul);
+    }
+  }
+  drawSav();
+  call({ action:"savings" }).then(function(d){ BANK.sav = d; if (typeof d.pts === "number") { S.pts = d.pts; paintChips(); } if (document.body.contains(sh)) drawSav(); }, function(e){ sh.textContent = ""; sh.appendChild(h("p", "empty", e.message)); });
+
+  /* the rich list */
+  v.appendChild(h("h2", "sec", "🏆 Rich list"));
+  v.appendChild(h("p", "lead", "Everyone's pence, savings and shares added up. Only names and totals are shown."));
+  var rh = h("div"); v.appendChild(rh);
+  function drawRich(){
+    rh.textContent = "";
+    var r = BANK.rich; if (!r) { rh.appendChild(h("p", "empty", "Counting…")); return; }
+    var ol = h("ol", "rich");
+    r.top.forEach(function(x){
+      var li = h("li", x.me ? "me" : "");
+      li.appendChild(h("span", "rk", x.rank === 1 ? "🥇" : x.rank === 2 ? "🥈" : x.rank === 3 ? "🥉" : String(x.rank)));
+      li.appendChild(h("span", "rn", x.name + (x.me ? " (you)" : "")));
+      li.appendChild(h("b", null, Math.round(x.worth).toLocaleString() + "p"));
+      ol.appendChild(li);
+    });
+    rh.appendChild(ol);
+    if (r.me && r.me.rank > 10) rh.appendChild(h("p", "note", "You're number " + r.me.rank + " of " + r.me.of + ", with " + Math.round(r.me.worth).toLocaleString() + "p."));
+  }
+  drawRich();
+  call({ action:"richList" }).then(function(d){ BANK.rich = d; if (document.body.contains(rh)) drawRich(); }, function(e){ rh.textContent = ""; rh.appendChild(h("p", "empty", e.message)); });
 }
 function labelledSave(list){
   var g = h("div", "grid");
@@ -1318,7 +1439,7 @@ function tabStocks(v){
       var row = h("button", "stkrow" + (STK.sel === c.sym ? " on" : "")); row.type = "button";
       row.appendChild(h("span", "stkemo", c.emoji));
       var nm = h("span", "stknm"); nm.appendChild(h("b", null, c.name)); var hd = held(c.sym);
-      nm.appendChild(h("small", null, c.sym + " · " + c.sector + (hd.shares ? " · you have " + hd.shares.toLocaleString() : "")));
+      nm.appendChild(h("small", null, c.sym + " · " + c.sector + (c.div ? " · 💷 " + (c.div * 100).toFixed(1) + "% a week" : "") + (hd.shares ? " · you have " + hd.shares.toLocaleString() : "")));
       row.appendChild(nm); row.appendChild(chartSvg(c.day, "spark"));
       var px = h("span", "stkpx"), ch = pct(c.price, c.dayAgo);
       px.appendChild(h("b", null, c.price.toLocaleString() + "p")); px.appendChild(h("small", ch > 0 ? "up" : ch < 0 ? "down" : "", (ch > 0 ? "▲ " : ch < 0 ? "▼ " : "") + Math.abs(ch) + "% today"));
@@ -1330,6 +1451,16 @@ function tabStocks(v){
     });
     host.appendChild(list);
 
+    if (d.divPaid > 0) toast("💷 Dividends paid: +" + d.divPaid + "p");
+    if ((d.divs || []).length) {
+      host.appendChild(h("h2", "sec", "💷 Dividends you've been paid"));
+      var dl = h("ul", "stknews");
+      d.divs.forEach(function(x){
+        var c = d.companies.filter(function(y){ return y.sym === x.sym; })[0];
+        dl.appendChild(h("li", null, "+" + x.amount + "p from " + (c ? c.emoji + " " + c.name : x.sym) + " · " + new Date(x.at).toLocaleDateString([], { weekday:"short", day:"numeric", month:"short" })));
+      });
+      host.appendChild(dl);
+    }
     host.appendChild(h("h2", "sec", "📰 Market news"));
     if (!d.news.length) host.appendChild(h("p", "note", "No news yet."));
     else { var ul = h("ul", "stknews"); d.news.slice(0, 8).forEach(function(n){ ul.appendChild(newsLi(n)); }); host.appendChild(ul); }
@@ -1349,7 +1480,8 @@ function tabStocks(v){
      ["Don't put all your eggs in one basket", "Owning a few different companies means one bad day doesn't wipe you out. That's called diversifying."],
      ["News moves prices", "Good news usually pushes a price up and bad news pushes it down. Keep an eye on the news below."],
      ["Steady or wild?", "Some shares (like Munch Mart) barely move; others (like Dragon Air) jump around. Wild ones can win big or lose big."],
-     ["Patience pays", "Prices wobble every few minutes. Over weeks, good companies tend to grow - panicking and selling on a bad day often loses."]]
+     ["Patience pays", "Prices wobble every few minutes. Over weeks, good companies tend to grow - panicking and selling on a bad day often loses."],
+     ["Dividends", "Some companies share their profits with the people who own their shares. Here they're paid every Monday, on the shares you held all of the week before - so keeping them pays."]]
       .forEach(function(t){ var b = h("div"); b.appendChild(h("b", null, t[0])); b.appendChild(h("p", "note", t[1])); tips.appendChild(b); });
     host.appendChild(tips);
   }
