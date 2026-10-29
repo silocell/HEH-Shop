@@ -1513,8 +1513,8 @@ function tabStocks(v){
     var bx = h("div", "stkbuy");
     var q = h("input"); q.type = "number"; q.min = "1"; q.step = "1"; q.value = String(STK.qty); q.setAttribute("aria-label", "How many shares");
     var cost = h("span", "note");
-    function setQ(n){ STK.qty = Math.max(1, Math.min(100000, Math.floor(n) || 1)); q.value = String(STK.qty); STK.armed = null; paint(); }
-    q.oninput = function(){ STK.qty = Math.max(1, Math.min(100000, Math.floor(Number(q.value)) || 1)); STK.armed = null; paint(); };
+    function setQ(n){ STK.qty = Math.max(1, Math.min(100000000, Math.floor(n) || 1)); q.value = String(STK.qty); STK.armed = null; paint(); }
+    q.oninput = function(){ STK.qty = Math.max(1, Math.min(100000000, Math.floor(Number(q.value)) || 1)); STK.armed = null; paint(); };
     bx.appendChild(q);
     [1, 10, 100].forEach(function(n){ var b = h("button", "stkq", "×" + n); b.type = "button"; b.onclick = function(){ setQ(n); }; bx.appendChild(b); });
     var mx = h("button", "stkq", "Max I can buy"); mx.type = "button"; mx.onclick = function(){ setQ(Math.floor(S.pts / c.price)); }; bx.appendChild(mx);
