@@ -74,6 +74,10 @@ main{max-width:1100px;margin:0 auto;padding:18px 16px 70px}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;padding:2px 2px 8px}
 .tab{flex:none;border:1px solid var(--rule);background:var(--card);border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;white-space:nowrap}
 .tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab.hot{font-size:1.02rem;padding:10px 18px;border:0;color:#fff;box-shadow:0 8px 18px -10px rgba(0,0,0,.6)}
+.tab.hot.owned{background:linear-gradient(135deg,#2563eb,#7c3aed)} .tab.hot.achievements{background:linear-gradient(135deg,#d97706,#db2777)}
+.tab.hot[aria-selected="true"]{outline:3px solid var(--ink);outline-offset:2px}
+.tab .cnt{display:inline-block;margin-left:8px;background:rgba(255,255,255,.25);border-radius:999px;padding:0 8px;font-size:.8rem}
 .sub{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
 .sub .tab{padding:6px 12px;font-size:.86rem}
 .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 14px}
@@ -607,8 +611,8 @@ function filtersBar(){
 }
 
 /* ---------- the tabs ---------- */
-var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["wallet","💳 Wallet"],["cards","🎴 Card designs"],["trade","🤝 Trade"],["market","🏪 Market"],["stocks","📈 Stocks"],["character","🧑 Character"],["art","🎨 Art"],["tags","🏷️ Tags"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
-            ["limited","⏳ Limited"],["earned","🏅 Earned & special"],["achievements","🏆 Achievements"],["credits","Credits"]];
+var TABS = [["week","🔥 This week"],["owned","🎒 Owned"],["achievements","🏆 Achievements"],["wallet","💳 Wallet"],["cards","🎴 Card designs"],["trade","🤝 Trade"],["market","🏪 Market"],["stocks","📈 Stocks"],["character","🧑 Character"],["art","🎨 Art"],["tags","🏷️ Tags"],["name","✍️ Name colour"],["theme","🖌️ Themes"],
+            ["limited","⏳ Limited"],["earned","🏅 Earned & special"],["credits","Credits"]];
 var listHost = null, listFn = null;
 function renderList(){ if (listHost && listFn) { listHost.textContent = ""; listHost.appendChild(listFn()); markOn(); } }
 function render(){
@@ -616,7 +620,13 @@ function render(){
   var t = document.getElementById("tabs"); t.textContent = "";
   TABS.forEach(function(x){
     if (x[0] === "stocks" && !STK.ok) return;   /* only once the server has the market */
-    var b = h("button", "tab", x[1]); b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", view.tab === x[0] ? "true" : "false");
+    var b = h("button", "tab", x[1]); b.type = "button"; b.setAttribute("role", "tab");
+    if (x[0] === "owned" || x[0] === "achievements") {
+      b.classList.add("hot", x[0]);
+      var n = x[0] === "owned" ? C.items.filter(function(i){ return !isFree(i) && has(i); }).length
+        : (S.achievements || []).filter(function(a){ return a.done; }).length + "/" + (S.achievements || []).length;
+      b.appendChild(h("span", "cnt", String(n)));
+    } b.setAttribute("aria-selected", view.tab === x[0] ? "true" : "false");
     b.onclick = function(){ view.tab = x[0]; view.opt = null; location.hash = x[0]; render(); };
     t.appendChild(b);
   });
@@ -674,14 +684,35 @@ function tabOwned(v){
   var free = C.items.filter(isFree).length;
   v.appendChild(h("h2", "sec", "Owned"));
   v.appendChild(h("p", "lead", "You own " + mine.length + (mine.length === 1 ? " thing" : " things") + " - " + ex.length + " exclusive. (Plus " + free + " free starter items everyone has.)"));
-  var byRare = function(a, b){ return RAR.indexOf(b.rarity) - RAR.indexOf(a.rarity) || a.name.localeCompare(b.name); };
-  v.appendChild(h("h2", "sec", "✨ Exclusive (" + ex.length + ")"));
-  v.appendChild(h("p", "lead", "Rare finds: Legendary, Mythic, limited copies, achievement rewards, special-day items, and staff or one-of-a-kind items."));
   var KIND = { card:"Debit card", bg:"Background", pattern:"Pattern", face:"Emoji character", frame:"Frame", hat:"Hat", sticker:"Sticker", name:"Name colour", theme:"Theme", tag:"Tag", style:"Character style", char:"Character part" };
   var labelled = function(g){ if (g.querySelectorAll) g.querySelectorAll(".card").forEach(function(c){ var it = BY[c.dataset.id]; if (it && KIND[it.part]) c.insertBefore(h("span", "own", KIND[it.part]), c.querySelector(".price")); }); return g; };
-  v.appendChild(labelled(grid(ex.sort(byRare), "Nothing exclusive yet - earn achievements, save up Pounds, or come back on a special day.")));
-  v.appendChild(h("h2", "sec", "Everything else (" + reg.length + ")"));
-  v.appendChild(labelled(grid(reg.sort(byRare), "Nothing bought yet - have a look in the other tabs.")));
+  /* Grouped rarest first: one of a kind, honours, founder, helper, tester,
+     2-5 copies, achievement and special-day items, then by rarity. */
+  var TIERS = [
+    ["💎 One of a kind", "Only one exists in the whole Launchpad - and it's yours.", function(i){ return i.stock === 1; }],
+    ["🏅 Honours", "Given by the founder.", function(i){ return i.gift === "honour"; }],
+    ["👑 Founder exclusive", "Only the founder has these.", function(i){ return i.only === "owner"; }],
+    ["🛟 Helper", "Every helper has these.", function(i){ return i.only === "helper"; }],
+    ["🧪 Tester", "A thank-you for testing the Launchpad.", function(i){ return i.gift === "tester"; }],
+    ["🔥 Only a few exist", "Just 2 to 5 copies in the whole Launchpad.", function(i){ return i.stock > 1; }],
+    ["🏆 Achievement rewards", "Earned, never bought.", function(i){ return !!i.ach; }],
+    ["🎉 Special days", "Only claimable on their day.", function(i){ return !!(i.days && i.days.length); }],
+    ["🌈 Mythic", "", function(i){ return i.rarity === "mythic" || i.rarity === "exotic" || i.rarity === "relic"; }],
+    ["🟠 Legendary", "", function(i){ return i.rarity === "legendary"; }],
+    ["🟣 Epic", "", function(i){ return i.rarity === "epic"; }],
+    ["🔵 Rare", "", function(i){ return i.rarity === "rare"; }],
+    ["⚪ Common and the rest", "", function(){ return true; }]
+  ];
+  var left = mine.slice(), jump = h("div", "sub"); v.appendChild(jump);
+  TIERS.forEach(function(t, k){
+    var got = left.filter(t[2]); if (!got.length) return;
+    left = left.filter(function(i){ return got.indexOf(i) < 0; });
+    var hd = h("h2", "sec", t[0] + " (" + got.length + ")"); hd.id = "own" + k; v.appendChild(hd);
+    if (t[1]) v.appendChild(h("p", "lead", t[1]));
+    v.appendChild(labelled(grid(got.sort(function(a, b){ return a.name.localeCompare(b.name); }))));
+    var j = h("button", "tab", t[0] + " " + got.length); j.type = "button"; j.onclick = function(){ hd.scrollIntoView({ behavior:"smooth", block:"start" }); }; jump.appendChild(j);
+  });
+  if (!mine.length) v.appendChild(h("p", "empty", "Nothing yet - have a look in This week, or earn some achievements."));
 }
 function tabWeek(v){
   dayBar(v);
