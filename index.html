@@ -1614,6 +1614,9 @@ sb.auth.getSession().then(function(r){
   if (!s) { gate("Sign in on the Launchpad first, then come back here."); return; }
   var md = s.user.user_metadata || {};
   me = { name: md.full_name || md.name || (s.user.email || "").split("@")[0], email: s.user.email || "" };
+  /* the shop can be switched off (for everyone, or for one person) by the Launchpad's admins */
+  return sb.rpc("my_features").then(function(fr){ return fr && !fr.error && fr.data ? fr.data : { shop:true }; }, function(){ return { shop:true }; }).then(function(ft){
+  if (ft.shop === false) { gate("The Launchpad Shop is switched off for your account just now."); return; }
   return Promise.all([HEHAvatar.ready, call({ action:"get" })]).then(function(x){
     /* The vault (1000+ items with 1-3 copies) stays out of sight except
        the two in this week's shop and any you own. */
@@ -1628,6 +1631,7 @@ sb.auth.getSession().then(function(r){
     var want = location.hash.slice(1); if (TABS.some(function(t){ return t[0] === want; })) view.tab = want;
     paintChips(); paintHero(); render(); loadCounts();
     call({ action:"stocks" }).then(function(d){ STK.data = d; STK.ok = true; render(); }, function(){});
+  });
   });
 }).catch(function(e){ gate((e && e.message) || "The shop couldn't open. Try again in a minute."); });
 document.getElementById("creditsLink").onclick = function(e){ if (S) { e.preventDefault(); view.tab = "credits"; render(); window.scrollTo(0, 0); } };
