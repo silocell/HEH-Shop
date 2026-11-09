@@ -484,6 +484,7 @@ function actionBtn(it){
   var b = h("button", "btn"); b.type = "button";
   var mine = has(it), wearing = isWearing(it);
   if (mine) {
+    if (wearing && canTakeOff(it)) { b.textContent = "Take it off"; b.className = "btn ghost"; b.onclick = function(){ takeOff(it); }; return b; }
     b.textContent = wearing ? "You're wearing this" : "Wear it"; b.disabled = wearing || !styleOk(it);
     b.onclick = function(){ go("use", it); };
     return b;
@@ -520,6 +521,29 @@ function payCard(it, p){
     setTimeout(function(){ go("buy", it); }, 450);
   };
   return b;
+}
+/* Taking one thing off puts that part back to how everyone starts
+   (the server fills in the starting item for anything left empty). */
+var START = { bg: "bg-sky", pattern: "pt-none", face: "f-letter", frame: "fr-none", hat: "h-none",
+  sticker: "st-none", name: "nc-plain", theme: "th-none", tag: "tg-none", card: "cd-classic" };
+function canTakeOff(it){
+  if (SIMPLE.indexOf(it.part) >= 0) return START[it.part] !== it.id;
+  if (it.part === "style") return it.v !== "emoji";
+  if (it.part === "char") return !isFree(it);
+  return false;
+}
+function takeOff(it){
+  var l = clone(S.look);
+  if (SIMPLE.indexOf(it.part) >= 0) l[it.part] = "";
+  else if (it.part === "style") l.style = "emoji";
+  else if (it.part === "char") {
+    var c = l.chars[it.style];
+    if (c) { if (/Color$/.test(it.opt)) delete c.colors[it.opt]; else delete c.parts[it.opt]; }
+  }
+  call({ action: "outfit", look: l }).then(function(st){
+    S = st; trial = clone(S.look); HEHAvatar.applyTheme(trial); paintChips();
+    toast("Took off " + it.name + "."); paintHero(); render();
+  }).catch(function(e){ toast(e.message, true); paintHero(); });
 }
 function isWearing(it){
   var l = S.look;
