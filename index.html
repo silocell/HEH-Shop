@@ -1617,7 +1617,7 @@ sb.auth.getSession().then(function(r){
   me = { name: md.full_name || md.name || (s.user.email || "").split("@")[0], email: s.user.email || "" };
   /* the shop can be switched off (for everyone, or for one person) by the Launchpad's admins */
   return sb.rpc("my_features").then(function(fr){ return fr && !fr.error && fr.data ? fr.data : { shop:true }; }, function(){ return { shop:true }; }).then(function(ft){
-  if (ft.shop === false) { gate(ft.school ? "The Shop isn't available on the school's network - it'll be here when you're home." : "The Launchpad Shop is switched off for your account just now."); return; }
+  if (ft.shop === false) { gate((ft.school_off || []).indexOf("shop") >= 0 ? "The Shop isn't available on the school's network - it'll be here when you're home." : "The Launchpad Shop is switched off for your account just now."); return; }
   return Promise.all([HEHAvatar.ready, call({ action:"get" })]).then(function(x){
     /* The vault (1000+ items with 1-3 copies) stays out of sight except
        the two in this week's shop and any you own. */
